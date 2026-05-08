@@ -1,0 +1,19 @@
+.DS_Store
+
+# .NET build output
+bin/
+obj/
+Debug/
+Release/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Logs and local artifacts
+*.log
