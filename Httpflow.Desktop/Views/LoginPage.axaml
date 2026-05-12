@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Httpflow.Desktop.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+        x:Class="Httpflow.Desktop.Views.LoginPage"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Login"
+        Width="1100"
+        Height="760"
+        MinWidth="960"
+        MinHeight="680">
+
+    <DockPanel>
+        <controls:AppNavbar DockPanel.Dock="Top"/>
+
+        <Grid ColumnDefinitions="*,Auto,*" Margin="32">
+            <Border Grid.Column="1"
+                    MaxWidth="420"
+                    MinWidth="360"
+                    Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Login"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,12"/>
+                    
+                    <TextBlock Text="Email"/>
+                    <TextBox x:Name="EmailTextBox"
+                             PlaceholderText="you@example.com"/>
+
+                    <TextBlock Text="Password"/>
+                    <TextBox x:Name="PasswordTextBox"
+                             PlaceholderText="Enter password"
+                             PasswordChar="*"/>
+
+                    <TextBlock x:Name="ErrorTextBlock"
+                               IsVisible="False"
+                               TextWrapping="Wrap"/>
+
+                    <Button x:Name="LoginButton"
+                            Content="Login"
+                            HorizontalAlignment="Stretch"
+                            Click="LoginButton_OnClick"
+                            Margin="0,8,0,0"/>
+
+                    <Button x:Name="GoToRegisterButton"
+                            Content="Create account"
+                            HorizontalAlignment="Center"
+                            Click="GoToRegisterButton_OnClick"
+                            Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

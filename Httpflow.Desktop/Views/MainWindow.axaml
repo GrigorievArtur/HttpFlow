@@ -1,20 +1,82 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Httpflow.Desktop.ViewModels"
+        xmlns:controls="using:Httpflow.Desktop.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
         x:Class="Httpflow.Desktop.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Httpflow.Desktop">
+        Title="Httpflow"
+        Width="1100"
+        Height="760"
+        MinWidth="960"
+        MinHeight="680">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <DockPanel>
+        <controls:AppNavbar DockPanel.Dock="Top"/>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <ContentControl x:Name="MainContent">
+        <Grid Margin="18" RowDefinitions="Auto,*" ColumnDefinitions="2.4*,3.6*">
+            <Grid Grid.Row="0"
+                  Grid.Column="0"
+                  Margin="0,0,18,12"
+                  ColumnDefinitions="*,Auto">
+                <TextBox PlaceholderText="Search"/>
+                <Button Grid.Column="1"
+                        Content="New"
+                        Margin="12,0,0,0"/>
+            </Grid>
 
+            <Grid Grid.Row="1"
+                  Grid.Column="0"
+                  Margin="0,0,18,0"
+                  RowDefinitions="Auto,Auto,Auto,*">
+                <Button Content="Project 1"
+                        Click="ProjectButton_OnClick"
+                        HorizontalContentAlignment="Left"/>
+                <Button Grid.Row="1"
+                        Content="Project 1"
+                        Click="ProjectButton_OnClick"
+                        HorizontalContentAlignment="Left"
+                        Margin="0,12,0,0"/>
+                <Button Grid.Row="2"
+                        Content="Project 1"
+                        Click="ProjectButton_OnClick"
+                        HorizontalContentAlignment="Left"
+                        Margin="0,12,0,0"/>
+                <Border Grid.Row="3"
+                        Margin="0,12,0,0"/>
+            </Grid>
+
+            <StackPanel Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="1"
+                        Spacing="14">
+                <TextBlock x:Name="CurrentUserTextBlock"
+                           Text="Quick actions"/>
+
+                <Button Content="Run all tests"/>
+
+                <TextBlock Text="Group tests"
+                           Margin="0,10,0,0"/>
+
+                <Separator/>
+
+                <TextBlock Text="Group1"
+                           Margin="0,10,0,0"/>
+                <Button Content="Run group test"/>
+
+                <TextBlock Text="Group2"
+                           Margin="0,10,0,0"/>
+                <Button Content="Run group test"/>
+
+                <Button x:Name="LogoutButton"
+                        Content="Logout"
+                        HorizontalAlignment="Left"
+                        Click="LogoutButton_OnClick"
+                        Margin="0,18,0,0"/>
+            </StackPanel>
+        </Grid>
+        </ContentControl>
+    </DockPanel>
 </Window>

@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Httpflow.Desktop.Controls.AppNavbar">
+    <Border Padding="16,12">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Button Content="Profile"/>
+            <Button Content="Projects"/>
+            <Button Content="Dashboard"/>
+            <Button Content="Variables"/>
+            <Button Content="Logs"/>
+            <Button Content="Run"/>
+        </StackPanel>
+    </Border>
+</UserControl>

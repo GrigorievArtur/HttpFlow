@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="Controls/AppNavbar.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/LoginPage.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/MainWindow.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/ProjectWorkspacePage.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/ProjectWorkspaceWindow.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/RegisterPage.axaml" value="Httpflow.Desktop.csproj" />
+      </map>
+    </option>
+  </component>
+</project>
