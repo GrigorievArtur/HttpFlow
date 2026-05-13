@@ -30,7 +30,7 @@
                     <TextBlock Text="Email"/>
                     <TextBox x:Name="EmailTextBox"
                              PlaceholderText="you@example.com"/>
-
+    
                     <TextBlock Text="Password"/>
                     <TextBox x:Name="PasswordTextBox"
                              PlaceholderText="Enter password"
