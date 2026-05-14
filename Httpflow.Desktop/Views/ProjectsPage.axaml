@@ -6,57 +6,99 @@
              d:DesignWidth="1100"
              d:DesignHeight="760"
              x:Class="Httpflow.Desktop.Views.ProjectsPage">
-    <Grid Margin="18"
-          RowDefinitions="Auto,*"
-          ColumnDefinitions="2.4*,3.6*">
-        <Grid Grid.Row="0"
-              Grid.Column="0"
-              Margin="0,0,18,12"
-              ColumnDefinitions="*,Auto">
-            <TextBox PlaceholderText="Search projects"/>
-            <Button Grid.Column="1"
-                    Content="New"
-                    Margin="12,0,0,0"/>
+    <Grid>
+        <Grid Margin="18"
+              RowDefinitions="Auto,*"
+              ColumnDefinitions="2.4*,3.6*">
+            <Grid Grid.Row="0"
+                  Grid.Column="0"
+                  Margin="0,0,18,12"
+                  ColumnDefinitions="*,Auto">
+                <TextBox PlaceholderText="Search projects"/>
+                <Button Grid.Column="1"
+                        Content="New"
+                        Margin="12,0,0,0"
+                        Click="NewButton_OnClick"/>
+            </Grid>
+
+            <Grid Grid.Row="1"
+                  Grid.Column="0"
+                  Margin="0,0,18,0"
+                  RowDefinitions="Auto,*">
+                <TextBlock x:Name="ProjectsStatusTextBlock"
+                           Text="Loading projects..."/>
+                <StackPanel x:Name="ProjectsListPanel"
+                            Grid.Row="1"
+                            Margin="0,12,0,0"
+                            Spacing="12"/>
+            </Grid>
+
+            <StackPanel Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="1"
+                        Spacing="14">
+                <TextBlock x:Name="CurrentUserTextBlock"
+                           Text="Quick actions"/>
+
+                <Button Content="Run all tests"/>
+
+                <TextBlock Text="Group tests"
+                           Margin="0,10,0,0"/>
+
+                <Separator/>
+
+                <TextBlock Text="Group1"
+                           Margin="0,10,0,0"/>
+                <Button Content="Run group test"/>
+
+                <TextBlock Text="Group2"
+                           Margin="0,10,0,0"/>
+                <Button Content="Run group test"/>
+
+                <Button Content="Logout"
+                        HorizontalAlignment="Left"
+                        Click="LogoutButton_OnClick"
+                        Margin="0,18,0,0"/>
+            </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1"
-              Grid.Column="0"
-              Margin="0,0,18,0"
-              RowDefinitions="Auto,*">
-            <TextBlock x:Name="ProjectsStatusTextBlock"
-                       Text="Loading projects..."/>
-            <StackPanel x:Name="ProjectsListPanel"
-                        Grid.Row="1"
-                        Margin="0,12,0,0"
-                        Spacing="12"/>
-        </Grid>
-
-        <StackPanel Grid.Row="0"
-                    Grid.RowSpan="2"
-                    Grid.Column="1"
-                    Spacing="14">
-            <TextBlock x:Name="CurrentUserTextBlock"
-                       Text="Quick actions"/>
-
-            <Button Content="Run all tests"/>
-
-            <TextBlock Text="Group tests"
-                       Margin="0,10,0,0"/>
-
-            <Separator/>
-
-            <TextBlock Text="Group1"
-                       Margin="0,10,0,0"/>
-            <Button Content="Run group test"/>
-
-            <TextBlock Text="Group2"
-                       Margin="0,10,0,0"/>
-            <Button Content="Run group test"/>
-
-            <Button Content="Logout"
-                    HorizontalAlignment="Left"
-                    Click="LogoutButton_OnClick"
-                    Margin="0,18,0,0"/>
-        </StackPanel>
+        <Border x:Name="CreateProjectOverlay"
+                IsVisible="False"
+                Background="#80000000">
+            <Grid HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="24">
+                <Border Padding="24"
+                        MinWidth="320"
+                        MaxWidth="420">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Create project"
+                                   FontSize="20"/>
+                        <TextBlock Text="Project name"/>
+                        <TextBox x:Name="ProjectNameTextBox"
+                                 PlaceholderText="Enter project name"/>
+                        <TextBlock x:Name="CreateProjectMessageTextBlock"
+                                   IsVisible="False"
+                                   TextWrapping="Wrap"/>
+                        <Grid ColumnDefinitions="*,*"
+                              Margin="0,8,0,0">
+                            <Button x:Name="CancelCreateProjectButton"
+                                    Grid.Column="0"
+                                    Content="Cancel"
+                                    HorizontalAlignment="Stretch"
+                                    Click="CancelCreateProjectButton_OnClick"
+                                    Margin="0,0,6,0"/>
+                            <Button x:Name="ConfirmCreateProjectButton"
+                                    Grid.Column="1"
+                                    Content="Create"
+                                    Classes="accent"
+                                    HorizontalAlignment="Stretch"
+                                    Click="ConfirmCreateProjectButton_OnClick"
+                                    Margin="6,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
