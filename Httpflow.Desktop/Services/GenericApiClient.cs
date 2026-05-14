@@ -37,6 +37,11 @@ public class GenericApiClient
         return await SendAsync<T>(HttpMethod.Post, uri, body, accessToken);
     }
 
+    protected async Task<ApiResult<T>> PutAsync<T>(string uri, object body, string accessToken)
+    {
+        return await SendAsync<T>(HttpMethod.Put, uri, body, accessToken);
+    }
+
     protected async Task<ApiResult<T>> SendAsync<T>(
         HttpMethod method,
         string uri,

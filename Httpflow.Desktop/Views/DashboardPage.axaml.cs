@@ -1,95 +1,310 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Httpflow.Desktop.Dtos.Collaborators;
 
 namespace Httpflow.Desktop.Views;
 
 public partial class DashboardPage : UserControl
 {
-    private readonly List<Teammate> _teammates =
-    [
-        new("Alex Johnson", "Admin", true, "2024-01-14", "2026-05-05 09:42"),
-        new("Priya Patel", "Member", false, "2024-03-10", "2026-04-28 16:05"),
-        new("Jordan Kim", "Member", true, "2024-06-22", "2026-05-12 08:17")
-    ];
+    private const string AdminRole = "Admin";
+    private const string MemberRole = "Member";
+    private const string VisitorRole = "Visitor";
 
-    private Teammate? _selectedTeammate;
+    private readonly List<ProjectCollaboratorDto> _collaborators = [];
+    private ProjectCollaboratorDto? _selectedCollaborator;
+    private int? _currentUserId;
+    private string? _currentUserRole;
+    private bool _isUpdatingRoleSelection;
 
     public DashboardPage()
     {
         InitializeComponent();
+        Loaded += DashboardPage_OnLoaded;
+    }
 
-        RenderTeammates(_teammates);
-        SelectTeammate(_teammates[0]);
+    private App CurrentApp => (App)Application.Current!;
+
+    private async void DashboardPage_OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        Loaded -= DashboardPage_OnLoaded;
+        await LoadCollaboratorsAsync();
     }
 
     private void SearchTextBox_OnTextChanged(object? sender, TextChangedEventArgs e)
     {
-        var query = SearchTextBox.Text?.Trim() ?? string.Empty;
-        var filtered = _teammates
-            .Where(teammate => teammate.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || teammate.Role.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || teammate.StatusLabel.Contains(query, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        var filtered = GetVisibleCollaborators();
+        RenderCollaborators(filtered);
 
-        RenderTeammates(filtered);
-
-        if (_selectedTeammate is null || !filtered.Contains(_selectedTeammate))
+        if (_selectedCollaborator is null
+            || !filtered.Any(collaborator => collaborator.UserId == _selectedCollaborator.UserId))
         {
-            SelectTeammate(filtered.FirstOrDefault());
+            SelectCollaborator(filtered.FirstOrDefault());
         }
     }
 
-    private void RoleComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private async void InviteButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (_selectedTeammate is null || RoleComboBox.SelectedItem is not ComboBoxItem selectedRole)
+        await InviteCollaboratorAsync();
+    }
+
+    private async void RoleComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_isUpdatingRoleSelection
+            || _selectedCollaborator is null
+            || _selectedCollaborator.IsOwner
+            || RoleComboBox.SelectedItem is not ComboBoxItem selectedRole)
         {
             return;
         }
 
-        _selectedTeammate.Role = selectedRole.Content?.ToString() ?? _selectedTeammate.Role;
-        RefreshSelectedUserData();
-        RenderTeammates(GetVisibleTeammates());
+        var role = selectedRole.Content?.ToString() ?? _selectedCollaborator.Role;
+        if (role == _selectedCollaborator.Role)
+        {
+            return;
+        }
+
+        await UpdateCollaboratorRoleAsync(_selectedCollaborator, role);
     }
 
-    private void RenderTeammates(IReadOnlyCollection<Teammate> teammates)
+    private async Task LoadCollaboratorsAsync(int? selectedUserId = null)
     {
-        TeammatesListPanel.Children.Clear();
+        CollaboratorsListPanel.Children.Clear();
+        _collaborators.Clear();
+        _selectedCollaborator = null;
+        RefreshSelectedCollaboratorData();
+        SetManagementControlsEnabled(false);
 
-        foreach (var teammate in teammates)
+        if (CurrentApp.SelectedProjectId is not { } projectId)
         {
-            var row = CreateTeammateRow(teammate);
-            TeammatesListPanel.Children.Add(row);
+            ProjectTextBlock.Text = "Select a project";
+            StatusTextBlock.Text = "Select a project before opening the dashboard.";
+            return;
+        }
+
+        ProjectTextBlock.Text = CurrentApp.SelectedProjectName is { Length: > 0 } projectName
+            ? $"Project: {projectName}"
+            : $"Project #{projectId}";
+        StatusTextBlock.Text = "Loading collaborators...";
+
+        try
+        {
+            var token = await CurrentApp.JwtService.GetTokenAsync();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                StatusTextBlock.Text = "Please log in again to load collaborators.";
+                return;
+            }
+
+            var currentUserResult = await CurrentApp.AuthApiClient.GetCurrentUserAsync(token);
+            if (!currentUserResult.IsSuccess || currentUserResult.Data is null)
+            {
+                StatusTextBlock.Text = currentUserResult.StatusCode switch
+                {
+                    HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
+                        "Your session expired. Please log in again.",
+                    _ => currentUserResult.ErrorMessage ?? "Unable to load current user."
+                };
+                return;
+            }
+
+            _currentUserId = currentUserResult.Data.Id;
+
+            var collaboratorsResult = await CurrentApp.CollaboratorsApiClient.GetCollaboratorsAsync(token, projectId);
+            if (!collaboratorsResult.IsSuccess)
+            {
+                StatusTextBlock.Text = collaboratorsResult.StatusCode switch
+                {
+                    HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
+                        collaboratorsResult.ErrorMessage ?? "You do not have access to this project.",
+                    _ => collaboratorsResult.ErrorMessage ?? "Unable to load collaborators."
+                };
+                return;
+            }
+
+            _collaborators.AddRange(collaboratorsResult.Data ?? []);
+            _currentUserRole = _collaborators
+                .FirstOrDefault(collaborator => collaborator.UserId == _currentUserId)
+                ?.Role;
+
+            var visibleCollaborators = GetVisibleCollaborators();
+            RenderCollaborators(visibleCollaborators);
+            SelectCollaborator(
+                visibleCollaborators.FirstOrDefault(collaborator => collaborator.UserId == selectedUserId)
+                ?? visibleCollaborators.FirstOrDefault(collaborator => collaborator.UserId == _currentUserId)
+                ?? visibleCollaborators.FirstOrDefault());
+
+            StatusTextBlock.Text = _currentUserRole == AdminRole
+                ? "Ready."
+                : "Only project admins can invite collaborators or change roles.";
+            SetManagementControlsEnabled(_currentUserRole == AdminRole);
+        }
+        catch (HttpRequestException)
+        {
+            StatusTextBlock.Text = "Could not reach the backend.";
+        }
+        catch (Exception)
+        {
+            StatusTextBlock.Text = "Something went wrong while loading collaborators.";
         }
     }
 
-    private IReadOnlyCollection<Teammate> GetVisibleTeammates()
+    private async Task InviteCollaboratorAsync()
+    {
+        if (CurrentApp.SelectedProjectId is not { } projectId)
+        {
+            StatusTextBlock.Text = "Select a project before inviting collaborators.";
+            return;
+        }
+
+        var email = InviteEmailTextBox.Text?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            StatusTextBlock.Text = "Email is required.";
+            InviteEmailTextBox.Focus();
+            return;
+        }
+
+        var role = GetSelectedRole(InviteRoleComboBox);
+        SetManagementControlsEnabled(false);
+        StatusTextBlock.Text = "Inviting collaborator...";
+
+        try
+        {
+            var token = await CurrentApp.JwtService.GetTokenAsync();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                StatusTextBlock.Text = "Please log in again to invite collaborators.";
+                return;
+            }
+
+            var result = await CurrentApp.CollaboratorsApiClient.AddCollaboratorAsync(
+                token,
+                projectId,
+                new AddProjectCollaboratorDto(email, role));
+
+            if (!result.IsSuccess)
+            {
+                StatusTextBlock.Text = result.StatusCode switch
+                {
+                    HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
+                        result.ErrorMessage ?? "Only project admins can invite collaborators.",
+                    _ => result.ErrorMessage ?? "Unable to invite collaborator."
+                };
+                return;
+            }
+
+            InviteEmailTextBox.Text = string.Empty;
+            await LoadCollaboratorsAsync(result.Data?.UserId);
+        }
+        catch (HttpRequestException)
+        {
+            StatusTextBlock.Text = "Could not reach the backend.";
+        }
+        catch (Exception)
+        {
+            StatusTextBlock.Text = "Something went wrong while inviting the collaborator.";
+        }
+        finally
+        {
+            SetManagementControlsEnabled(_currentUserRole == AdminRole);
+        }
+    }
+
+    private async Task UpdateCollaboratorRoleAsync(ProjectCollaboratorDto collaborator, string role)
+    {
+        if (CurrentApp.SelectedProjectId is not { } projectId)
+        {
+            return;
+        }
+
+        SetManagementControlsEnabled(false);
+        StatusTextBlock.Text = "Updating role...";
+
+        try
+        {
+            var token = await CurrentApp.JwtService.GetTokenAsync();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                StatusTextBlock.Text = "Please log in again to update roles.";
+                return;
+            }
+
+            var result = await CurrentApp.CollaboratorsApiClient.UpdateCollaboratorRoleAsync(
+                token,
+                projectId,
+                collaborator.UserId,
+                new UpdateProjectCollaboratorRoleDto(role));
+
+            if (!result.IsSuccess)
+            {
+                StatusTextBlock.Text = result.StatusCode switch
+                {
+                    HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
+                        result.ErrorMessage ?? "Only project admins can change roles.",
+                    _ => result.ErrorMessage ?? "Unable to update collaborator role."
+                };
+                RefreshSelectedCollaboratorData();
+                return;
+            }
+
+            await LoadCollaboratorsAsync(collaborator.UserId);
+        }
+        catch (HttpRequestException)
+        {
+            StatusTextBlock.Text = "Could not reach the backend.";
+        }
+        catch (Exception)
+        {
+            StatusTextBlock.Text = "Something went wrong while updating the collaborator role.";
+        }
+        finally
+        {
+            SetManagementControlsEnabled(_currentUserRole == AdminRole);
+        }
+    }
+
+    private void RenderCollaborators(IReadOnlyCollection<ProjectCollaboratorDto> collaborators)
+    {
+        CollaboratorsListPanel.Children.Clear();
+
+        foreach (var collaborator in collaborators)
+        {
+            var row = CreateCollaboratorRow(collaborator);
+            CollaboratorsListPanel.Children.Add(row);
+        }
+    }
+
+    private IReadOnlyCollection<ProjectCollaboratorDto> GetVisibleCollaborators()
     {
         var query = SearchTextBox.Text?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(query))
         {
-            return _teammates;
+            return _collaborators;
         }
 
-        return _teammates
-            .Where(teammate => teammate.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || teammate.Role.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || teammate.StatusLabel.Contains(query, StringComparison.OrdinalIgnoreCase))
+        return _collaborators
+            .Where(collaborator => GetFullName(collaborator).Contains(query, StringComparison.OrdinalIgnoreCase)
+                || collaborator.Email.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || collaborator.Role.Contains(query, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
-    private Border CreateTeammateRow(Teammate teammate)
+    private Border CreateCollaboratorRow(ProjectCollaboratorDto collaborator)
     {
         var border = new Border
         {
             BorderBrush = Brushes.LightGray,
             BorderThickness = new Thickness(0, 0, 0, 1),
             Padding = new Thickness(14, 16),
-            Background = _selectedTeammate == teammate
+            Background = _selectedCollaborator?.UserId == collaborator.UserId
                 ? new SolidColorBrush(Color.Parse("#EEF3FF"))
                 : Brushes.Transparent
         };
@@ -101,7 +316,7 @@ public partial class DashboardPage : UserControl
             Padding = new Thickness(0),
             HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
         };
-        button.Click += (_, _) => SelectTeammate(teammate);
+        button.Click += (_, _) => SelectCollaborator(collaborator);
 
         var rowGrid = new Grid
         {
@@ -110,74 +325,80 @@ public partial class DashboardPage : UserControl
 
         rowGrid.Children.Add(new TextBlock
         {
-            Text = $"{teammate.Name} - {teammate.Role} - {teammate.StatusLabel}",
+            Text = collaborator.IsOwner
+                ? $"{GetFullName(collaborator)} - {collaborator.Role} - Owner"
+                : $"{GetFullName(collaborator)} - {collaborator.Role}",
             FontSize = 16,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
         });
 
-        var statusDot = new Border
+        var emailLabel = new TextBlock
         {
-            Width = 14,
-            Height = 14,
-            CornerRadius = new CornerRadius(7),
-            Background = teammate.IsOnline
-                ? new SolidColorBrush(Color.Parse("#33A852"))
-                : new SolidColorBrush(Color.Parse("#8F95A3")),
+            Text = collaborator.Email,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
         };
-        Grid.SetColumn(statusDot, 1);
-        rowGrid.Children.Add(statusDot);
+        Grid.SetColumn(emailLabel, 1);
+        rowGrid.Children.Add(emailLabel);
 
         button.Content = rowGrid;
         border.Child = button;
         return border;
     }
 
-    private void SelectTeammate(Teammate? teammate)
+    private void SelectCollaborator(ProjectCollaboratorDto? collaborator)
     {
-        _selectedTeammate = teammate;
-        RefreshSelectedUserData();
-        RenderTeammates(GetVisibleTeammates());
+        _selectedCollaborator = collaborator;
+        RefreshSelectedCollaboratorData();
+        RenderCollaborators(GetVisibleCollaborators());
     }
 
-    private void RefreshSelectedUserData()
+    private void RefreshSelectedCollaboratorData()
     {
-        if (_selectedTeammate is null)
+        _isUpdatingRoleSelection = true;
+
+        if (_selectedCollaborator is null)
         {
-            SelectedNameTextBlock.Text = "Name: No teammate selected";
-            InvitedTextBlock.Text = "-";
-            LastLoginTextBlock.Text = "-";
-            StatusTextBlock.Text = "Status: -";
+            SelectedNameTextBlock.Text = "Name: No collaborator selected";
+            SelectedEmailTextBlock.Text = "-";
+            AccessTextBlock.Text = "-";
             RoleComboBox.SelectedIndex = -1;
+            RoleComboBox.IsEnabled = false;
+            _isUpdatingRoleSelection = false;
             return;
         }
 
-        SelectedNameTextBlock.Text = $"Name: {_selectedTeammate.Name}";
-        InvitedTextBlock.Text = _selectedTeammate.InvitedOn;
-        LastLoginTextBlock.Text = _selectedTeammate.LastLogin;
-        StatusTextBlock.Text = $"Status: {_selectedTeammate.StatusLabel}";
-        RoleComboBox.SelectedIndex = _selectedTeammate.Role switch
+        SelectedNameTextBlock.Text = $"Name: {GetFullName(_selectedCollaborator)}";
+        SelectedEmailTextBlock.Text = _selectedCollaborator.Email;
+        AccessTextBlock.Text = _selectedCollaborator.IsOwner ? "Owner" : "Collaborator";
+        RoleComboBox.SelectedIndex = _selectedCollaborator.Role switch
         {
-            "Admin" => 0,
-            "Member" => 1,
-            "Viewer" => 2,
+            AdminRole => 0,
+            MemberRole => 1,
+            VisitorRole => 2,
             _ => -1
         };
+        RoleComboBox.IsEnabled = _currentUserRole == AdminRole && !_selectedCollaborator.IsOwner;
+        _isUpdatingRoleSelection = false;
     }
 
-    private sealed class Teammate(
-        string name,
-        string role,
-        bool isOnline,
-        string invitedOn,
-        string lastLogin)
+    private void SetManagementControlsEnabled(bool isEnabled)
     {
-        public string Name { get; } = name;
-        public bool IsOnline { get; } = isOnline;
-        public string InvitedOn { get; } = invitedOn;
-        public string LastLogin { get; } = lastLogin;
-        public string Role { get; set; } = role;
-        public string StatusLabel => IsOnline ? "Online" : "Offline";
+        InviteEmailTextBox.IsEnabled = isEnabled;
+        InviteRoleComboBox.IsEnabled = isEnabled;
+        InviteButton.IsEnabled = isEnabled;
+        RoleComboBox.IsEnabled = isEnabled && _selectedCollaborator is not null && !_selectedCollaborator.IsOwner;
+    }
+
+    private static string GetSelectedRole(ComboBox comboBox)
+    {
+        return comboBox.SelectedItem is ComboBoxItem item && item.Content is not null
+            ? item.Content.ToString() ?? MemberRole
+            : MemberRole;
+    }
+
+    private static string GetFullName(ProjectCollaboratorDto collaborator)
+    {
+        return $"{collaborator.Firstname} {collaborator.Lastname}";
     }
 }

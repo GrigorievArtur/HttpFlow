@@ -16,12 +16,20 @@ public partial class App : Application
     private HttpClient? _httpClient;
     private AuthApiClient? _authApiClient;
     private ProjectsApiClient? _projectsApiClient;
+    private CollaboratorsApiClient? _collaboratorsApiClient;
 
     public JwtService JwtService => _jwtService;
 
     public AuthApiClient AuthApiClient => _authApiClient ??= new AuthApiClient(HttpClient);
 
     public ProjectsApiClient ProjectsApiClient => _projectsApiClient ??= new ProjectsApiClient(HttpClient);
+
+    public CollaboratorsApiClient CollaboratorsApiClient =>
+        _collaboratorsApiClient ??= new CollaboratorsApiClient(HttpClient);
+
+    public int? SelectedProjectId { get; set; }
+
+    public string? SelectedProjectName { get; set; }
 
     private HttpClient HttpClient => _httpClient ??= new HttpClient
     {

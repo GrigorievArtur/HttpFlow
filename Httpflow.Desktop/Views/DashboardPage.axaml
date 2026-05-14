@@ -16,7 +16,7 @@
                   Margin="0,0,16,12"
                   ColumnDefinitions="*,Auto">
                 <TextBox x:Name="SearchTextBox"
-                         PlaceholderText="Search teammates"
+                         PlaceholderText="Search collaborators"
                          TextChanged="SearchTextBox_OnTextChanged"/>
                 <Button Grid.Column="1"
                         Width="42"
@@ -35,34 +35,54 @@
                     CornerRadius="8"
                     Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
                 <ScrollViewer>
-                    <StackPanel x:Name="TeammatesListPanel"
+                    <StackPanel x:Name="CollaboratorsListPanel"
                                 Spacing="0"/>
                 </ScrollViewer>
             </Border>
 
             <Grid Grid.RowSpan="2"
                   Grid.Column="1"
-                  RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto"
+                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
                   RowSpacing="14">
-                <TextBlock Text="Email"
+                <TextBlock x:Name="ProjectTextBlock"
+                           Text="Select a project"
                            FontSize="16"
                            FontWeight="SemiBold"/>
 
-                <TextBox Grid.Row="1"
-                         PlaceholderText="teammate@company.com"/>
+                <TextBlock Grid.Row="1"
+                           Text="Email"/>
 
-                <Button Grid.Row="2"
-                        Height="44"
-                        Content="+ Invite teammate"
-                        FontWeight="SemiBold"/>
+                <TextBox x:Name="InviteEmailTextBox"
+                         Grid.Row="2"
+                         PlaceholderText="collaborator@company.com"/>
 
                 <TextBlock Grid.Row="3"
-                           Text="Selected user data"
+                           Text="Role"/>
+
+                <ComboBox x:Name="InviteRoleComboBox"
+                          Grid.Row="4"
+                          Width="180"
+                          HorizontalAlignment="Left"
+                          SelectedIndex="1">
+                    <ComboBoxItem Content="Admin"/>
+                    <ComboBoxItem Content="Member"/>
+                    <ComboBoxItem Content="Visitor"/>
+                </ComboBox>
+
+                <Button x:Name="InviteButton"
+                        Grid.Row="5"
+                        Height="44"
+                        Content="+ Invite collaborator"
+                        FontWeight="SemiBold"
+                        Click="InviteButton_OnClick"/>
+
+                <TextBlock Grid.Row="6"
+                           Text="Selected collaborator"
                            FontSize="18"
                            FontWeight="SemiBold"
                            Margin="0,10,0,0"/>
 
-                <Border Grid.Row="4"
+                <Border Grid.Row="7"
                         BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -75,57 +95,47 @@
                                    x:Name="SelectedNameTextBlock"
                                    FontSize="16"
                                    FontWeight="SemiBold"
-                                   Text="Name: Alex Johnson"/>
+                                   Text="Name: No collaborator selected"/>
 
                         <TextBlock Grid.Row="1"
+                                   Text="Email"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="SelectedEmailTextBlock"
+                                   Grid.Row="1"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="-"/>
+
+                        <TextBlock Grid.Row="2"
                                    Text="Role"
                                    VerticalAlignment="Center"/>
                         <ComboBox x:Name="RoleComboBox"
-                                  Grid.Row="1"
+                                  Grid.Row="2"
                                   Grid.Column="1"
                                   Width="180"
                                   SelectionChanged="RoleComboBox_OnSelectionChanged">
                             <ComboBoxItem Content="Admin"/>
                             <ComboBoxItem Content="Member"/>
-                            <ComboBoxItem Content="Viewer"/>
+                            <ComboBoxItem Content="Visitor"/>
                         </ComboBox>
 
-                        <TextBlock Grid.Row="2"
-                                   Text="Invited"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock x:Name="InvitedTextBlock"
-                                   Grid.Row="2"
-                                   Grid.Column="1"
-                                   VerticalAlignment="Center"
-                                   Text="2024-01-14"/>
-
                         <TextBlock Grid.Row="3"
-                                   Text="Last login"
+                                   Text="Access"
                                    VerticalAlignment="Center"/>
-                        <TextBlock x:Name="LastLoginTextBlock"
+                        <TextBlock x:Name="AccessTextBlock"
                                    Grid.Row="3"
                                    Grid.Column="1"
                                    VerticalAlignment="Center"
-                                   Text="2026-05-05 09:42"/>
+                                   Text="-"/>
 
                         <TextBlock Grid.Row="4"
                                    Grid.ColumnSpan="2"
                                    x:Name="StatusTextBlock"
                                    VerticalAlignment="Top"
-                                   Text="Status: Online"/>
+                                   TextWrapping="Wrap"
+                                   Text="Select a project to manage collaborators."/>
                     </Grid>
                 </Border>
-
-                <TextBlock Grid.Row="5"
-                           Text="Danger Zone"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Margin="0,8,0,0"/>
-
-                <Button Grid.Row="6"
-                        HorizontalAlignment="Left"
-                        Padding="28,14"
-                        Content="Eliminate user"/>
             </Grid>
         </Grid>
     </Border>

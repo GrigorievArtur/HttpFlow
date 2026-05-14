@@ -17,18 +17,12 @@ public partial class ProjectsPage : UserControl
     public event EventHandler? WorkspaceRequested;
     public event EventHandler? LogoutRequested;
 
+    private App CurrentApp => (App)Application.Current!;
+
     public ProjectsPage()
     {
         InitializeComponent();
-        Loaded += ProjectsPage_OnLoaded;
-    }
-
-    private App CurrentApp => (App)Application.Current!;
-
-    private async void ProjectsPage_OnLoaded(object? sender, RoutedEventArgs e)
-    {
-        Loaded -= ProjectsPage_OnLoaded;
-        await LoadProjectList();
+        Loaded += async (_, _) => await LoadProjectList();
     }
 
     public async Task LoadProjectList()
@@ -39,6 +33,7 @@ public partial class ProjectsPage : UserControl
         try
         {
             var token = await CurrentApp.JwtService.GetTokenAsync();
+
             if (string.IsNullOrWhiteSpace(token))
             {
                 ProjectsStatusTextBlock.Text = "Please log in again to load projects.";
@@ -46,6 +41,7 @@ public partial class ProjectsPage : UserControl
             }
 
             var result = await CurrentApp.ProjectsApiClient.GetProjectsAsync(token);
+
             if (!result.IsSuccess)
             {
                 ProjectsStatusTextBlock.Text = result.StatusCode switch
@@ -58,60 +54,44 @@ public partial class ProjectsPage : UserControl
             }
 
             var projects = result.Data ?? [];
-            if (projects.Count == 0)
-            {
-                ProjectsStatusTextBlock.Text = "No projects yet.";
-                return;
-            }
 
-            ProjectsStatusTextBlock.Text = $"Projects ({projects.Count})";
+            ProjectsStatusTextBlock.Text = projects.Count == 0
+                ? "No projects yet."
+                : $"Projects ({projects.Count})";
+
             foreach (var project in projects)
-            {
                 ProjectsListPanel.Children.Add(CreateProjectButton(project));
-            }
         }
         catch (HttpRequestException)
         {
             ProjectsStatusTextBlock.Text = "Could not reach the backend.";
         }
-        catch (Exception)
+        catch
         {
             ProjectsStatusTextBlock.Text = "Something went wrong while loading projects.";
         }
     }
 
-    public void SetQuickActionsText(string text)
-    {
-        CurrentUserTextBlock.Text = text;
-    }
+    public void SetQuickActionsText(string text) => CurrentUserTextBlock.Text = text;
 
     private void NewButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        CreateProjectMessageTextBlock.IsVisible = false;
-        CreateProjectMessageTextBlock.Text = string.Empty;
-        ProjectNameTextBox.Text = string.Empty;
+        ShowCreateProjectMessage("");
+        ProjectNameTextBox.Text = "";
         SetCreateProjectDialogOpen(true);
     }
 
-    private void CancelCreateProjectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
+    private void CancelCreateProjectButton_OnClick(object? sender, RoutedEventArgs e) =>
         SetCreateProjectDialogOpen(false);
-    }
 
-    private async void ConfirmCreateProjectButton_OnClick(object? sender, RoutedEventArgs e)
-    {
+    private async void ConfirmCreateProjectButton_OnClick(object? sender, RoutedEventArgs e) =>
         await CreateProjectAsync();
-    }
 
-    private void WorkspaceButton_OnClick(object? sender, RoutedEventArgs e)
-    {
+    private void WorkspaceButton_OnClick(object? sender, RoutedEventArgs e) =>
         WorkspaceRequested?.Invoke(this, EventArgs.Empty);
-    }
 
-    private void LogoutButton_OnClick(object? sender, RoutedEventArgs e)
-    {
+    private void LogoutButton_OnClick(object? sender, RoutedEventArgs e) =>
         LogoutRequested?.Invoke(this, EventArgs.Empty);
-    }
 
     private Button CreateProjectButton(ProjectDto project)
     {
@@ -122,8 +102,15 @@ public partial class ProjectsPage : UserControl
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch
         };
 
-        button.Click += WorkspaceButton_OnClick;
+        button.Click += (_, _) => SelectProject(project);
         return button;
+    }
+
+    private void SelectProject(ProjectDto project)
+    {
+        CurrentApp.SelectedProjectId = project.Id;
+        CurrentApp.SelectedProjectName = project.Name;
+        WorkspaceRequested?.Invoke(this, EventArgs.Empty);
     }
 
     protected override async void OnKeyDown(KeyEventArgs e)
@@ -131,18 +118,14 @@ public partial class ProjectsPage : UserControl
         base.OnKeyDown(e);
 
         if (!CreateProjectOverlay.IsVisible)
-        {
             return;
-        }
 
         if (e.Key == Key.Escape)
         {
             SetCreateProjectDialogOpen(false);
             e.Handled = true;
-            return;
         }
-
-        if (e.Key == Key.Enter)
+        else if (e.Key == Key.Enter)
         {
             await CreateProjectAsync();
             e.Handled = true;
@@ -151,7 +134,8 @@ public partial class ProjectsPage : UserControl
 
     private async Task CreateProjectAsync()
     {
-        var projectName = ProjectNameTextBox.Text?.Trim() ?? string.Empty;
+        var projectName = ProjectNameTextBox.Text?.Trim() ?? "";
+
         if (string.IsNullOrWhiteSpace(projectName))
         {
             ShowCreateProjectMessage("Project name is required.");
@@ -165,6 +149,7 @@ public partial class ProjectsPage : UserControl
         try
         {
             var token = await CurrentApp.JwtService.GetTokenAsync();
+
             if (string.IsNullOrWhiteSpace(token))
             {
                 ShowCreateProjectMessage("Please log in again to create a project.");
@@ -177,16 +162,14 @@ public partial class ProjectsPage : UserControl
 
             if (!result.IsSuccess)
             {
-                var message = result.StatusCode switch
+                ShowCreateProjectMessage(result.StatusCode switch
                 {
                     HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
                         "Your session expired. Please log in again.",
                     HttpStatusCode.Conflict =>
                         result.ErrorMessage ?? "A project with this name already exists.",
                     _ => result.ErrorMessage ?? "Unable to create the project."
-                };
-
-                ShowCreateProjectMessage(message);
+                });
                 return;
             }
 
@@ -197,7 +180,7 @@ public partial class ProjectsPage : UserControl
         {
             ShowCreateProjectMessage("Could not reach the backend.");
         }
-        catch (Exception)
+        catch
         {
             ShowCreateProjectMessage("Something went wrong while creating the project.");
         }
@@ -212,9 +195,7 @@ public partial class ProjectsPage : UserControl
         CreateProjectOverlay.IsVisible = isOpen;
 
         if (isOpen)
-        {
             ProjectNameTextBox.Focus();
-        }
     }
 
     private void SetCreateProjectButtonsEnabled(bool isEnabled)
