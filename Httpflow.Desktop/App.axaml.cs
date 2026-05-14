@@ -13,14 +13,20 @@ namespace Httpflow.Desktop;
 public partial class App : Application
 {
     private readonly JwtService _jwtService = new();
+    private HttpClient? _httpClient;
     private AuthApiClient? _authApiClient;
+    private ProjectsApiClient? _projectsApiClient;
 
     public JwtService JwtService => _jwtService;
 
-    public AuthApiClient AuthApiClient => _authApiClient ??= new AuthApiClient(new HttpClient
+    public AuthApiClient AuthApiClient => _authApiClient ??= new AuthApiClient(HttpClient);
+
+    public ProjectsApiClient ProjectsApiClient => _projectsApiClient ??= new ProjectsApiClient(HttpClient);
+
+    private HttpClient HttpClient => _httpClient ??= new HttpClient
     {
         BaseAddress = new Uri(Environment.GetEnvironmentVariable("API_HOST") ?? "http://localhost:5157/")
-    });
+    };
 
     public override void Initialize()
     {

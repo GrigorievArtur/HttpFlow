@@ -4,10 +4,12 @@
     <option name="projectPerEditor">
       <map>
         <entry key="Controls/AppNavbar.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/DashboardPage.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/LoginPage.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/MainWindow.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/ProjectWorkspacePage.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/ProjectWorkspaceWindow.axaml" value="Httpflow.Desktop.csproj" />
+        <entry key="Views/ProjectsPage.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/RegisterPage.axaml" value="Httpflow.Desktop.csproj" />
       </map>
     </option>

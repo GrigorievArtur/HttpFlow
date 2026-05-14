@@ -13,70 +13,9 @@
         MinHeight="680">
 
     <DockPanel>
-        <controls:AppNavbar DockPanel.Dock="Top"/>
+        <controls:AppNavbar x:Name="AppNavbar"
+                            DockPanel.Dock="Top"/>
 
-        <ContentControl x:Name="MainContent">
-        <Grid Margin="18" RowDefinitions="Auto,*" ColumnDefinitions="2.4*,3.6*">
-            <Grid Grid.Row="0"
-                  Grid.Column="0"
-                  Margin="0,0,18,12"
-                  ColumnDefinitions="*,Auto">
-                <TextBox PlaceholderText="Search"/>
-                <Button Grid.Column="1"
-                        Content="New"
-                        Margin="12,0,0,0"/>
-            </Grid>
-
-            <Grid Grid.Row="1"
-                  Grid.Column="0"
-                  Margin="0,0,18,0"
-                  RowDefinitions="Auto,Auto,Auto,*">
-                <Button Content="Project 1"
-                        Click="ProjectButton_OnClick"
-                        HorizontalContentAlignment="Left"/>
-                <Button Grid.Row="1"
-                        Content="Project 1"
-                        Click="ProjectButton_OnClick"
-                        HorizontalContentAlignment="Left"
-                        Margin="0,12,0,0"/>
-                <Button Grid.Row="2"
-                        Content="Project 1"
-                        Click="ProjectButton_OnClick"
-                        HorizontalContentAlignment="Left"
-                        Margin="0,12,0,0"/>
-                <Border Grid.Row="3"
-                        Margin="0,12,0,0"/>
-            </Grid>
-
-            <StackPanel Grid.Row="0"
-                        Grid.RowSpan="2"
-                        Grid.Column="1"
-                        Spacing="14">
-                <TextBlock x:Name="CurrentUserTextBlock"
-                           Text="Quick actions"/>
-
-                <Button Content="Run all tests"/>
-
-                <TextBlock Text="Group tests"
-                           Margin="0,10,0,0"/>
-
-                <Separator/>
-
-                <TextBlock Text="Group1"
-                           Margin="0,10,0,0"/>
-                <Button Content="Run group test"/>
-
-                <TextBlock Text="Group2"
-                           Margin="0,10,0,0"/>
-                <Button Content="Run group test"/>
-
-                <Button x:Name="LogoutButton"
-                        Content="Logout"
-                        HorizontalAlignment="Left"
-                        Click="LogoutButton_OnClick"
-                        Margin="0,18,0,0"/>
-            </StackPanel>
-        </Grid>
-        </ContentControl>
+        <ContentControl x:Name="MainContent"/>
     </DockPanel>
 </Window>

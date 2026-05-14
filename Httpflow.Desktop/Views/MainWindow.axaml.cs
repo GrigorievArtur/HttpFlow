@@ -10,9 +10,14 @@ namespace Httpflow.Desktop.Views;
 
 public partial class MainWindow : Window
 {
+    private string _projectsQuickActionsText = "Quick actions";
+
     public MainWindow()
     {
         InitializeComponent();
+        AppNavbar.ProjectsRequested += AppNavbar_OnProjectsRequested;
+        AppNavbar.DashboardRequested += AppNavbar_OnDashboardRequested;
+        AppNavbar.WorkspaceRequested += AppNavbar_OnWorkspaceRequested;
         Opened += OnOpened;
     }
 
@@ -20,21 +25,58 @@ public partial class MainWindow : Window
 
     private async void OnOpened(object? sender, EventArgs e)
     {
-        await EnsureAuthenticatedAsync();
+        if (await EnsureAuthenticatedAsync())
+        {
+            ShowProjectsPage();
+        }
     }
 
-    private async void LogoutButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async void AppNavbar_OnWorkspaceRequested(object? sender, EventArgs e)
+    {
+        await EnsureAuthenticatedAsync();
+    }
+    
+    private async void ProjectsPage_OnLogoutRequested(object? sender, EventArgs e)
     {
         await CurrentApp.JwtService.DeleteAsync();
         CurrentApp.ShowLoginWindow(this);
     }
 
-    private void ProjectButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ProjectsPage_OnWorkspaceRequested(object? sender, EventArgs e)
+    {
+        ShowWorkspacePage();
+    }
+
+    private void AppNavbar_OnProjectsRequested(object? sender, EventArgs e)
+    {
+        ShowProjectsPage();
+    }
+
+    private void AppNavbar_OnDashboardRequested(object? sender, EventArgs e)
+    {
+        ShowDashboardPage();
+    }
+
+    private void ShowProjectsPage()
+    {
+        var projectsPage = new ProjectsPage();
+        projectsPage.SetQuickActionsText(_projectsQuickActionsText);
+        projectsPage.WorkspaceRequested += ProjectsPage_OnWorkspaceRequested;
+        projectsPage.LogoutRequested += ProjectsPage_OnLogoutRequested;
+        MainContent.Content = projectsPage;
+    }
+
+    private void ShowDashboardPage()
+    {
+        MainContent.Content = new DashboardPage();
+    }
+
+    private void ShowWorkspacePage()
     {
         MainContent.Content = new ProjectWorkspacePage();
     }
 
-    private async Task EnsureAuthenticatedAsync()
+    private async Task<bool> EnsureAuthenticatedAsync()
     {
         try
         {
@@ -42,14 +84,14 @@ public partial class MainWindow : Window
             if (session is null)
             {
                 CurrentApp.ShowLoginWindow(this, "Please log in to continue.");
-                return;
+                return false;
             }
 
             if (CurrentApp.JwtService.IsExpired(session))
             {
                 await CurrentApp.JwtService.DeleteAsync();
                 CurrentApp.ShowLoginWindow(this, "Your session expired. Please log in again.");
-                return;
+                return false;
             }
 
             var result = await CurrentApp.AuthApiClient.GetCurrentUserAsync(session.AccessToken);
@@ -59,27 +101,30 @@ public partial class MainWindow : Window
                 {
                     await CurrentApp.JwtService.DeleteAsync();
                     CurrentApp.ShowLoginWindow(this, "Your session expired. Please log in again.");
-                    return;
+                    return false;
                 }
 
-                CurrentUserTextBlock.Text = result.ErrorMessage ?? "Quick actions";
-                return;
+                _projectsQuickActionsText = result.ErrorMessage ?? "Quick actions";
+                return true;
             }
 
             SetCurrentUser(result.Data);
+            return true;
         }
         catch (HttpRequestException)
         {
-            CurrentUserTextBlock.Text = "Quick actions (API unavailable)";
+            _projectsQuickActionsText = "Quick actions (API unavailable)";
+            return true;
         }
         catch (Exception)
         {
-            CurrentUserTextBlock.Text = "Quick actions";
+            _projectsQuickActionsText = "Quick actions";
+            return true;
         }
     }
 
     private void SetCurrentUser(UserProfile user)
     {
-        CurrentUserTextBlock.Text = $"Quick actions for {user.Firstname} {user.Lastname}";
+        _projectsQuickActionsText = $"Quick actions for {user.Firstname} {user.Lastname}";
     }
 }
