@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
+             x:DataType="vm:ProjectWorkspaceViewModel"
              x:Class="Httpflow.Desktop.Views.ProjectWorkspacePage">
 
     <Grid x:Name="WorkspaceLayout"
@@ -48,6 +50,14 @@
                             VerticalAlignment="Top"
                             RenderTransformOrigin="0,0"
                             Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+                        <Canvas.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Add node">
+                                    <MenuItem Header="Start"
+                                              Command="{Binding AddStartNodeCommand}"/>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Canvas.ContextMenu>
                         <Ellipse x:Name="MouseProjectionDot"
                                  Width="12"
                                  Height="12"

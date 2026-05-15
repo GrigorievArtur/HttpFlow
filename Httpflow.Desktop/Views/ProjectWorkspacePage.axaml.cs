@@ -5,7 +5,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-
+using Httpflow.Desktop.ViewModels;
 
 namespace Httpflow.Desktop.Views;
 
@@ -27,6 +27,7 @@ public partial class ProjectWorkspacePage : UserControl
     public ProjectWorkspacePage()
     {
         InitializeComponent();
+        DataContext = new ProjectWorkspaceViewModel();
         NodeCanvas.RenderTransform = _canvasScale;
 
         DrawGrid();
@@ -90,14 +91,21 @@ public partial class ProjectWorkspacePage : UserControl
     private void Viewport_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var pointer = e.GetCurrentPoint(ViewportSurface);
+        var viewportPoint = e.GetPosition(ViewportSurface);
+        UpdateMouseProjectionDot(viewportPoint);
+
+        if (pointer.Properties.IsRightButtonPressed)
+        {
+            return;
+        }
+
         if (!pointer.Properties.IsLeftButtonPressed)
         {
             return;
         }
 
         _isPanning = true;
-        _lastPanPoint = e.GetPosition(ViewportSurface);
-        UpdateMouseProjectionDot(_lastPanPoint);
+        _lastPanPoint = viewportPoint;
         e.Handled = true;
     }
 
@@ -180,6 +188,11 @@ public partial class ProjectWorkspacePage : UserControl
 
         Canvas.SetLeft(MouseProjectionDot, canvasPoint.X - dotRadius);
         Canvas.SetTop(MouseProjectionDot, canvasPoint.Y - dotRadius);
+
+        if (DataContext is ProjectWorkspaceViewModel viewModel)
+        {
+            viewModel.SetMouseProjectionPosition(canvasPoint);
+        }
     }
 
     private void SetZoom(double zoom)
@@ -199,8 +212,8 @@ public partial class ProjectWorkspacePage : UserControl
     private void ZoomDefaultButton_OnClick(object? sender, RoutedEventArgs e)
     {
         _zoom = 1;
-        _panX = 0;
-        _panY = 0;
+        // _panX = 0;
+        // _panY = 0;
         ApplyViewportTransform();
     }
 }

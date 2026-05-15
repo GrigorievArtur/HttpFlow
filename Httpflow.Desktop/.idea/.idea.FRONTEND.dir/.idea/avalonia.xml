@@ -3,6 +3,7 @@
   <component name="AvaloniaProject">
     <option name="projectPerEditor">
       <map>
+        <entry key="App.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Controls/AppNavbar.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/DashboardPage.axaml" value="Httpflow.Desktop.csproj" />
         <entry key="Views/LoginPage.axaml" value="Httpflow.Desktop.csproj" />

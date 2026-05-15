@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using Avalonia.Markup.Xaml;
 using DotNetEnv;
+using Httpflow.Desktop.Dtos.Projects;
 using Httpflow.Desktop.Services;
 using Httpflow.Desktop.Views;
 
@@ -28,8 +29,9 @@ public partial class App : Application
         _collaboratorsApiClient ??= new CollaboratorsApiClient(HttpClient);
 
     public int? SelectedProjectId { get; set; }
-
     public string? SelectedProjectName { get; set; }
+    
+    public ProjectDto? SelectedProject{ get; set; }
 
     private HttpClient HttpClient => _httpClient ??= new HttpClient
     {
