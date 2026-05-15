@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Httpflow.Desktop.Dtos.Operations;
 using Httpflow.Desktop.Models.Nodes;
 
@@ -7,6 +8,11 @@ namespace Httpflow.Desktop.Services;
 public class NodeOperations
 {
     private int _nextNodeId = 1;
+
+    public void SyncNextNodeId(IEnumerable<CanvasNodeRecord> nodes)
+    {
+        _nextNodeId = nodes.Any() ? nodes.Max(node => node.Id) + 1 : 1;
+    }
 
     public CanvasNodeRecord CreateNodeRecord(NewNodeOperation operation)
     {

@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Services;
+using Httpflow.Desktop.Services.Projects;
 using Httpflow.Desktop.ViewModels;
 
 namespace Httpflow.Desktop.Views;
@@ -27,18 +30,33 @@ public partial class ProjectWorkspacePage : UserControl
     private Control? _draggedNode;
     private Point _dragPointerOffset;
     private readonly NodeBuilder _nodeBuilder = new();
+    private readonly ProjectSession _projectSession;
+    private readonly List<Control> _nodeControls = [];
     
     public ProjectWorkspacePage()
     {
         InitializeComponent();
-        var viewModel = new ProjectWorkspaceViewModel();
+        _projectSession = ((App)Application.Current!).ProjectSession;
+        var viewModel = new ProjectWorkspaceViewModel(_projectSession);
         viewModel.NodeCreated += OnNodeCreated;
         DataContext = viewModel;
         NodeCanvas.RenderTransform = _canvasScale;
+        Loaded += ProjectWorkspacePage_OnLoaded;
 
         DrawGrid();
         NodeCanvas.Children.Remove(MouseProjectionDot);
         NodeCanvas.Children.Add(MouseProjectionDot);
+    }
+
+    private async void ProjectWorkspacePage_OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (((App)Application.Current!).SelectedProjectId is not { } projectId)
+        {
+            return;
+        }
+
+        await _projectSession.LoadProjectById(projectId);
+        RenderLoadedNodes();
     }
 
     private void SidebarToggleButton_OnClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -142,19 +160,9 @@ public partial class ProjectWorkspacePage : UserControl
         e.Handled = true;
     }
 
-    private void OnNodeCreated(Httpflow.Desktop.Models.Nodes.CanvasNodeRecord nodeRecord)
+    private void OnNodeCreated(CanvasNodeRecord nodeRecord)
     {
-        var nodeControl = _nodeBuilder.Build(nodeRecord);
-        nodeControl.PointerPressed += Node_OnPointerPressed;
-        nodeControl.PointerMoved += Node_OnPointerMoved;
-        nodeControl.PointerReleased += Node_OnPointerReleased;
-
-        Canvas.SetLeft(nodeControl, nodeRecord.X);
-        Canvas.SetTop(nodeControl, nodeRecord.Y);
-
-        NodeCanvas.Children.Add(nodeControl);
-        NodeCanvas.Children.Remove(MouseProjectionDot);
-        NodeCanvas.Children.Add(MouseProjectionDot);
+        AddNodeControl(nodeRecord);
     }
 
     private void Node_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -195,6 +203,15 @@ public partial class ProjectWorkspacePage : UserControl
         var canvasPoint = e.GetPosition(NodeCanvas);
         Canvas.SetLeft(control, Math.Max(0, canvasPoint.X - _dragPointerOffset.X));
         Canvas.SetTop(control, Math.Max(0, canvasPoint.Y - _dragPointerOffset.Y));
+
+        if (control.DataContext is CanvasNodeRecord nodeRecord)
+        {
+            _projectSession.MoveNode(
+                nodeRecord.Id,
+                (int)Math.Round(Canvas.GetLeft(control)),
+                (int)Math.Round(Canvas.GetTop(control)));
+        }
+
         UpdateMouseProjectionDot(e.GetPosition(ViewportSurface));
         e.Handled = true;
     }
@@ -282,6 +299,42 @@ public partial class ProjectWorkspacePage : UserControl
         _canvasScale.ScaleY = _zoom;
         NodeCanvas.Margin = new Thickness(_panX, _panY, 0, 0);
         ZoomTextBlock.Text = $"{_zoom:P0}";
+    }
+
+    private void RenderLoadedNodes()
+    {
+        foreach (var control in _nodeControls)
+        {
+            NodeCanvas.Children.Remove(control);
+        }
+
+        _nodeControls.Clear();
+
+        if (_projectSession.CurrentProject is null)
+        {
+            return;
+        }
+
+        foreach (var node in _projectSession.CurrentProject.Nodes)
+        {
+            AddNodeControl(node);
+        }
+    }
+
+    private void AddNodeControl(CanvasNodeRecord nodeRecord)
+    {
+        var nodeControl = _nodeBuilder.Build(nodeRecord);
+        nodeControl.PointerPressed += Node_OnPointerPressed;
+        nodeControl.PointerMoved += Node_OnPointerMoved;
+        nodeControl.PointerReleased += Node_OnPointerReleased;
+
+        Canvas.SetLeft(nodeControl, nodeRecord.X);
+        Canvas.SetTop(nodeControl, nodeRecord.Y);
+
+        _nodeControls.Add(nodeControl);
+        NodeCanvas.Children.Add(nodeControl);
+        NodeCanvas.Children.Remove(MouseProjectionDot);
+        NodeCanvas.Children.Add(MouseProjectionDot);
     }
 
     private void ZoomDefaultButton_OnClick(object? sender, RoutedEventArgs e)

@@ -42,6 +42,11 @@ public class GenericApiClient
         return await SendAsync<T>(HttpMethod.Put, uri, body, accessToken);
     }
 
+    protected async Task<ApiResult<T>> DeleteAsync<T>(string uri, string accessToken)
+    {
+        return await SendAsync<T>(HttpMethod.Delete, uri, body: null, accessToken);
+    }
+
     protected async Task<ApiResult<T>> SendAsync<T>(
         HttpMethod method,
         string uri,

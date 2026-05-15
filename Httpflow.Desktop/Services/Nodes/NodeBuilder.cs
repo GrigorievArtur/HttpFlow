@@ -46,6 +46,7 @@ public class NodeBuilder
         return new Border
         {
             Width = 220,
+            DataContext = record,
             Padding = new Thickness(14),
             Background = Brush.Parse("#FFFDF7"),
             BorderBrush = Brush.Parse("#1D1D1D"),

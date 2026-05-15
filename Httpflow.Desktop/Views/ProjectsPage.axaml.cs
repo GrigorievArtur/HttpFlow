@@ -110,6 +110,7 @@ public partial class ProjectsPage : UserControl
     {
         CurrentApp.SelectedProjectId = project.Id;
         CurrentApp.SelectedProjectName = project.Name;
+        CurrentApp.SelectedProject = project;
         WorkspaceRequested?.Invoke(this, EventArgs.Empty);
     }
 

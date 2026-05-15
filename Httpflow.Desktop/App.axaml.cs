@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using DotNetEnv;
 using Httpflow.Desktop.Dtos.Projects;
 using Httpflow.Desktop.Services;
+using Httpflow.Desktop.Services.Projects;
 using Httpflow.Desktop.Views;
 
 namespace Httpflow.Desktop;
@@ -18,6 +19,7 @@ public partial class App : Application
     private AuthApiClient? _authApiClient;
     private ProjectsApiClient? _projectsApiClient;
     private CollaboratorsApiClient? _collaboratorsApiClient;
+    private ProjectSession? _projectSession;
 
     public JwtService JwtService => _jwtService;
 
@@ -28,10 +30,12 @@ public partial class App : Application
     public CollaboratorsApiClient CollaboratorsApiClient =>
         _collaboratorsApiClient ??= new CollaboratorsApiClient(HttpClient);
 
+    public ProjectSession ProjectSession => _projectSession ??= new ProjectSession(this);
+
     public int? SelectedProjectId { get; set; }
     public string? SelectedProjectName { get; set; }
     
-    public ProjectDto? SelectedProject{ get; set; }
+    public ProjectDto? SelectedProject { get; set; }
 
     private HttpClient HttpClient => _httpClient ??= new HttpClient
     {
