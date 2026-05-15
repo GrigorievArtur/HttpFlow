@@ -3,6 +3,7 @@ using Avalonia;
 using CommunityToolkit.Mvvm.Input;
 using Httpflow.Desktop.Dtos.Operations;
 using Httpflow.Desktop.Enums.Nodes;
+using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Services;
 
 namespace Httpflow.Desktop.ViewModels;
@@ -13,6 +14,7 @@ public class ProjectWorkspaceViewModel : ViewModelBase
     private Point _mouseProjectionPosition;
 
     public IRelayCommand AddStartNodeCommand { get; }
+    public event Action<CanvasNodeRecord>? NodeCreated;
 
     public ProjectWorkspaceViewModel()
     {
@@ -26,9 +28,11 @@ public class ProjectWorkspaceViewModel : ViewModelBase
 
     private void AddStartNode()
     {
-        _nodeOperations.CreateNode(new NewNodeOperation(
+        var nodeRecord = _nodeOperations.CreateNodeRecord(new NewNodeOperation(
             NodeType.Start.ToString(),
             (int)Math.Round(_mouseProjectionPosition.X),
             (int)Math.Round(_mouseProjectionPosition.Y)));
+
+        NodeCreated?.Invoke(nodeRecord);
     }
 }

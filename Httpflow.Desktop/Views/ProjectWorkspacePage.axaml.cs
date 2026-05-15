@@ -5,6 +5,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Httpflow.Desktop.Services;
 using Httpflow.Desktop.ViewModels;
 
 namespace Httpflow.Desktop.Views;
@@ -23,11 +24,16 @@ public partial class ProjectWorkspacePage : UserControl
     private double _panY;
     private bool _isPanning;
     private Point _lastPanPoint;
+    private Control? _draggedNode;
+    private Point _dragPointerOffset;
+    private readonly NodeBuilder _nodeBuilder = new();
     
     public ProjectWorkspacePage()
     {
         InitializeComponent();
-        DataContext = new ProjectWorkspaceViewModel();
+        var viewModel = new ProjectWorkspaceViewModel();
+        viewModel.NodeCreated += OnNodeCreated;
+        DataContext = viewModel;
         NodeCanvas.RenderTransform = _canvasScale;
 
         DrawGrid();
@@ -133,6 +139,75 @@ public partial class ProjectWorkspacePage : UserControl
     private void Viewport_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         _isPanning = false;
+        e.Handled = true;
+    }
+
+    private void OnNodeCreated(Httpflow.Desktop.Models.Nodes.CanvasNodeRecord nodeRecord)
+    {
+        var nodeControl = _nodeBuilder.Build(nodeRecord);
+        nodeControl.PointerPressed += Node_OnPointerPressed;
+        nodeControl.PointerMoved += Node_OnPointerMoved;
+        nodeControl.PointerReleased += Node_OnPointerReleased;
+
+        Canvas.SetLeft(nodeControl, nodeRecord.X);
+        Canvas.SetTop(nodeControl, nodeRecord.Y);
+
+        NodeCanvas.Children.Add(nodeControl);
+        NodeCanvas.Children.Remove(MouseProjectionDot);
+        NodeCanvas.Children.Add(MouseProjectionDot);
+    }
+
+    private void Node_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Control control)
+        {
+            return;
+        }
+
+        var pointer = e.GetCurrentPoint(NodeCanvas);
+        if (!pointer.Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        _draggedNode = control;
+        var canvasPoint = e.GetPosition(NodeCanvas);
+        _dragPointerOffset = new Point(
+            canvasPoint.X - Canvas.GetLeft(control),
+            canvasPoint.Y - Canvas.GetTop(control));
+
+        e.Pointer.Capture(control);
+        e.Handled = true;
+    }
+
+    private void Node_OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_draggedNode is null || sender is not Control control)
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(control, _draggedNode))
+        {
+            return;
+        }
+
+        var canvasPoint = e.GetPosition(NodeCanvas);
+        Canvas.SetLeft(control, Math.Max(0, canvasPoint.X - _dragPointerOffset.X));
+        Canvas.SetTop(control, Math.Max(0, canvasPoint.Y - _dragPointerOffset.Y));
+        UpdateMouseProjectionDot(e.GetPosition(ViewportSurface));
+        e.Handled = true;
+    }
+
+    private void Node_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (sender is not Control control)
+        {
+            return;
+        }
+
+        _draggedNode = null;
+        e.Pointer.Capture(null);
         e.Handled = true;
     }
 
