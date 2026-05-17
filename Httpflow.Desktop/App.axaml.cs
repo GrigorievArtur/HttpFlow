@@ -6,22 +6,24 @@ using System.Net.Http;
 using Avalonia.Markup.Xaml;
 using DotNetEnv;
 using Httpflow.Desktop.Dtos.Projects;
-using Httpflow.Desktop.Services;
+using Httpflow.Desktop.Features.Auth.Views;
+using Httpflow.Desktop.Services.Auth;
+using Httpflow.Desktop.Services.Collaborators;
 using Httpflow.Desktop.Services.Projects;
-using Httpflow.Desktop.Views;
+using Httpflow.Desktop.Shell.Views;
 
 namespace Httpflow.Desktop;
 
 public partial class App : Application
 {
-    private readonly JwtService _jwtService = new();
+    private readonly JwtSessionService _jwtSessionService = new();
     private HttpClient? _httpClient;
     private AuthApiClient? _authApiClient;
     private ProjectsApiClient? _projectsApiClient;
     private CollaboratorsApiClient? _collaboratorsApiClient;
-    private ProjectSession? _projectSession;
+    private ProjectSessionService? _projectSession;
 
-    public JwtService JwtService => _jwtService;
+    public JwtSessionService JwtSessionService => _jwtSessionService;
 
     public AuthApiClient AuthApiClient => _authApiClient ??= new AuthApiClient(HttpClient);
 
@@ -30,12 +32,9 @@ public partial class App : Application
     public CollaboratorsApiClient CollaboratorsApiClient =>
         _collaboratorsApiClient ??= new CollaboratorsApiClient(HttpClient);
 
-    public ProjectSession ProjectSession => _projectSession ??= new ProjectSession(this);
+    public ProjectSessionService ProjectSessionService => _projectSession ??= new ProjectSessionService(this);
 
-    public int? SelectedProjectId { get; set; }
-    public string? SelectedProjectName { get; set; }
-    
-    public ProjectDto? SelectedProject { get; set; }
+    public ProjectDto? CurrentProject { get; set; }
 
     private HttpClient HttpClient => _httpClient ??= new HttpClient
     {
@@ -57,10 +56,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var storedSession = _jwtService.GetSessionAsync().GetAwaiter().GetResult();
-            desktop.MainWindow = storedSession is not null && !_jwtService.IsExpired(storedSession)
-                ? new MainWindow()
-                : new LoginPage();
+            var storedSession = _jwtSessionService.GetSessionAsync().GetAwaiter().GetResult();
+            desktop.MainWindow = storedSession is not null && !_jwtSessionService.IsExpired(storedSession)
+                ? new AppShellWindow()
+                : new LoginWindow();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -68,17 +67,17 @@ public partial class App : Application
 
     public void ShowLoginWindow(Avalonia.Controls.Window? currentWindow = null, string? errorMessage = null)
     {
-        SwapMainWindow(new LoginPage(errorMessage), currentWindow);
+        SwapMainWindow(new LoginWindow(errorMessage), currentWindow);
     }
 
     public void ShowRegisterWindow(Avalonia.Controls.Window? currentWindow = null, string? errorMessage = null)
     {
-        SwapMainWindow(new RegisterPage(errorMessage), currentWindow);
+        SwapMainWindow(new RegisterWindow(errorMessage), currentWindow);
     }
 
     public void ShowMainWindow(Avalonia.Controls.Window? currentWindow = null)
     {
-        SwapMainWindow(new MainWindow(), currentWindow);
+        SwapMainWindow(new AppShellWindow(), currentWindow);
     }
 
     private void SwapMainWindow(Avalonia.Controls.Window nextWindow, Avalonia.Controls.Window? currentWindow)

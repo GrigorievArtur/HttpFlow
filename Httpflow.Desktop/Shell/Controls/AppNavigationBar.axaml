@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Httpflow.Desktop.Shell.Controls.AppNavigationBar">
+    <Border Padding="16,12">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Button x:Name="ProfileButton"
+                    Content="Profile"
+                    Click="OnProfileButtonClick"/>
+            <Button x:Name="ProjectsButton"
+                    Content="Projects"
+                    Click="OnProjectsButtonClick"/>
+            <Button x:Name="WorkspaceButton"
+                    Content="Workspace"
+                    Click="OnWorkspaceButtonClick"/>
+            <Button x:Name="DashboardButton"
+                    Content="Dashboard"
+                    Click="OnDashboardButtonClick"/>
+            <Button Content="Variables"/>
+            <Button Content="Logs"/>
+            <Button Content="Run"/>
+        </StackPanel>
+    </Border>
+</UserControl>

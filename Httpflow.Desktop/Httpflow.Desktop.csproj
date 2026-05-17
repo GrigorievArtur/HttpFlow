@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\DashboardPage.axaml.cs">
-      <DependentUpon>DashboardPage.axaml</DependentUpon>
+    <Compile Update="Features\Collaborators\Views\CollaboratorDashboardView.axaml.cs">
+      <DependentUpon>CollaboratorDashboardView.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\ProjectsPage.axaml.cs">
-      <DependentUpon>ProjectsPage.axaml</DependentUpon>
+    <Compile Update="Features\Projects\Views\ProjectListView.axaml.cs">
+      <DependentUpon>ProjectListView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 

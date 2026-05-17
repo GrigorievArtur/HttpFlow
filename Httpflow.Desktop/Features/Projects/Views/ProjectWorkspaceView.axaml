@@ -1,0 +1,187 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.Features.Projects.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
+             x:DataType="vm:ProjectWorkspaceViewModel"
+             x:Class="Httpflow.Desktop.Features.Projects.Views.ProjectWorkspaceView">
+
+    <Grid x:Name="WorkspaceLayout"
+          ColumnDefinitions="*,Auto,392"
+          Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+        <Grid Grid.Column="0"
+              RowDefinitions="Auto,*"
+              Margin="16">
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10,8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding ProjectTitle}"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding ZoomDisplay}"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1"
+                    x:Name="ViewportBorder"
+                    Margin="0,12,0,0"
+                    Background="#F5F5F5"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    ClipToBounds="True">
+                <Grid x:Name="ViewportSurface"
+                      Background="Transparent"
+                    PointerWheelChanged="OnViewportPointerWheelChanged"
+                    PointerPressed="OnViewportPointerPressed"
+                    PointerMoved="OnViewportPointerMoved"
+                    PointerReleased="OnViewportPointerReleased">
+                    <Canvas x:Name="NodeCanvas"
+                            Width="3000"
+                            Height="2000"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            RenderTransformOrigin="0,0"
+                            Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+                        <Canvas.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Add node">
+                                    <MenuItem Header="Start"
+                                              Command="{Binding AddStartNodeCommand}"/>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Canvas.ContextMenu>
+                        <Ellipse x:Name="MouseProjectionDot"
+                                 Width="12"
+                                 Height="12"
+                                 Fill="Red"
+                                 IsHitTestVisible="False"/>
+                    </Canvas>
+                    
+                    <StackPanel HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal"
+                                Margin="12"
+                                Spacing="6">
+                        <TextBlock x:Name="ZoomTextBlock"
+                                   Text="{Binding ZoomDisplay}"
+                                   FontWeight="SemiBold"/>
+                        <Button Width="36"
+                                Height="36"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Content="-"
+                                Click="OnZoomOutButtonClick"/>
+                        <Button Width="36"
+                                Height="36"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Content="+"
+                                Click="OnZoomInButtonClick"/>
+                        <Button Width="54"
+                                Height="36"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Content="100%"
+                                Click="OnZoomDefaultButtonClick"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Button Grid.Column="1"
+                x:Name="SidebarToggleButton"
+                Width="36"
+                Height="36"
+                Margin="0,16,0,0"
+                Padding="0"
+                VerticalAlignment="Top"
+                Content="{Binding SidebarToggleText}"
+                Command="{Binding ToggleSidebarCommand}"/>
+
+        <Border Grid.Column="2"
+                x:Name="SidebarPanel"
+                IsVisible="{Binding IsSidebarOpen}"
+                Padding="22,18"
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1,0,0,0">
+            <Grid RowDefinitions="Auto,Auto,*,*">
+                <TextBlock Text="Http Request Name"
+                           FontSize="22"
+                           FontWeight="SemiBold"/>
+
+                <Grid Grid.Row="1"
+                      Margin="0,22,0,16"
+                      ColumnDefinitions="100,*,42"
+                      RowDefinitions="Auto,Auto"
+                      ColumnSpacing="10">
+                    <TextBlock Text="Method"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1"
+                               Text="Api link"
+                               FontWeight="SemiBold"/>
+
+                    <ComboBox Grid.Row="1"
+                              HorizontalAlignment="Stretch"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="GET"/>
+                        <ComboBoxItem Content="POST"/>
+                        <ComboBoxItem Content="PUT"/>
+                        <ComboBoxItem Content="PATCH"/>
+                        <ComboBoxItem Content="DELETE"/>
+                    </ComboBox>
+
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             HorizontalAlignment="Stretch"
+                             PlaceholderText="https://api.example.com"/>
+
+                    <Button Grid.Row="1"
+                            Grid.Column="2"
+                            Width="42"
+                            MinWidth="42"
+                            Height="36"
+                            Padding="0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                        <PathIcon Width="20"
+                                  Height="20"
+                                  Data="M4,3 L18,10 L4,17 L7,10 Z"/>
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="2"
+                      RowDefinitions="Auto,*"
+                      Margin="0,0,0,16">
+                    <TextBlock Text="Json data"
+                               FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="1"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             PlaceholderText="JSON body"/>
+                </Grid>
+
+                <Grid Grid.Row="3"
+                      RowDefinitions="Auto,*">
+                    <TextBlock Text="Response"
+                               FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="1"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             IsReadOnly="True"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.Features.Collaborators.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="700"
+             x:DataType="vm:CollaboratorDashboardViewModel"
+             x:Class="Httpflow.Desktop.Features.Collaborators.Views.CollaboratorDashboardView">
+
+    <Border Padding="18"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+        <Grid ColumnDefinitions="420,*"
+              RowDefinitions="Auto,*">
+            <Grid Grid.Row="0"
+                  Grid.Column="0"
+                  Margin="0,0,16,12"
+                  ColumnDefinitions="*,Auto">
+                <TextBox x:Name="SearchTextBox"
+                         PlaceholderText="Search collaborators"
+                         Text="{Binding SearchText, Mode=TwoWay}"/>
+                <Button Grid.Column="1"
+                        Width="42"
+                        Margin="10,0,0,0"
+                        Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Content="⇅"/>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,16,0"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                <ScrollViewer>
+                    <StackPanel x:Name="CollaboratorsListPanel"
+                                Spacing="0"/>
+                </ScrollViewer>
+            </Border>
+
+            <Grid Grid.RowSpan="2"
+                  Grid.Column="1"
+                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
+                  RowSpacing="14">
+                <TextBlock x:Name="ProjectTextBlock"
+                           Text="{Binding ProjectText}"
+                           FontSize="16"
+                           FontWeight="SemiBold"/>
+
+                <TextBlock Grid.Row="1"
+                           Text="Email"/>
+
+                <TextBox x:Name="InviteEmailTextBox"
+                         Grid.Row="2"
+                         PlaceholderText="collaborator@company.com"
+                         Text="{Binding InviteEmail, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="3"
+                           Text="Role"/>
+
+                <ComboBox x:Name="InviteRoleComboBox"
+                          Grid.Row="4"
+                          Width="180"
+                          HorizontalAlignment="Left"
+                          SelectedIndex="1"
+                          IsEnabled="{Binding IsManagementEnabled}">
+                    <ComboBoxItem Content="Admin"/>
+                    <ComboBoxItem Content="Member"/>
+                    <ComboBoxItem Content="Visitor"/>
+                </ComboBox>
+
+                <Button x:Name="InviteButton"
+                        Grid.Row="5"
+                        Height="44"
+                        Content="+ Invite collaborator"
+                        FontWeight="SemiBold"
+                        Command="{Binding InviteCollaboratorCommand}"
+                        IsEnabled="{Binding IsManagementEnabled}"/>
+
+                <TextBlock Grid.Row="6"
+                           Text="Selected collaborator"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Margin="0,10,0,0"/>
+
+                <Border Grid.Row="7"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="18">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*"
+                          ColumnDefinitions="120,*"
+                          RowSpacing="18"
+                          ColumnSpacing="12">
+                        <TextBlock Grid.ColumnSpan="2"
+                                   x:Name="SelectedNameTextBlock"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Text="{Binding SelectedCollaboratorName}"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Email"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="SelectedEmailTextBlock"
+                                   Grid.Row="1"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding SelectedCollaboratorEmail}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Role"
+                                   VerticalAlignment="Center"/>
+                        <ComboBox x:Name="RoleComboBox"
+                                  Grid.Row="2"
+                                  Grid.Column="1"
+                                  Width="180"
+                                  IsEnabled="{Binding CanEditSelectedRole}"
+                                  SelectionChanged="OnRoleComboBoxSelectionChanged">
+                            <ComboBoxItem Content="Admin"/>
+                            <ComboBoxItem Content="Member"/>
+                            <ComboBoxItem Content="Visitor"/>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="3"
+                                   Text="Access"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="AccessTextBlock"
+                                   Grid.Row="3"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding AccessText}"/>
+
+                        <TextBlock Grid.Row="4"
+                                   Grid.ColumnSpan="2"
+                                   x:Name="StatusTextBlock"
+                                   VerticalAlignment="Top"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding StatusText}"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>
