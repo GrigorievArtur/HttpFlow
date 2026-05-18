@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.Features.NodesPanel.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="392" d:DesignHeight="680"
+             x:DataType="vm:RequestNodePanelViewModel"
+             x:Class="Httpflow.Desktop.Features.NodesPanel.Views.RequestNodePanelView">
+    <Grid RowDefinitions="Auto,Auto,*,*">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="12">
+            <TextBox Text="{Binding RequestName}"
+                     PlaceholderText="Http Request Name"
+                     FontSize="22"
+                     FontWeight="SemiBold"/>
+
+            <Button Grid.Column="1"
+                    Width="36"
+                    Height="36"
+                    Padding="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding DeleteSelectedNodeCommand}">
+                <PathIcon Width="14"
+                          Height="14"
+                          Data="M4,6 H16 M7,6 V4 H13 V6 M7,8 V16 M10,8 V16 M13,8 V16 M5,6 L6,18 H14 L15,6"/>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              Margin="0,22,0,16"
+              ColumnDefinitions="100,*,42"
+              RowDefinitions="Auto,Auto"
+              ColumnSpacing="10">
+            <TextBlock Text="Method"
+                       FontWeight="SemiBold"/>
+            <TextBlock Grid.Column="1"
+                       Text="Api link"
+                       FontWeight="SemiBold"/>
+
+            <ComboBox Grid.Row="1"
+                      HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding Methods}"
+                      SelectedItem="{Binding Method}"/>
+
+            <TextBox Grid.Row="1"
+                     Grid.Column="1"
+                     HorizontalAlignment="Stretch"
+                     Text="{Binding Url}"
+                     PlaceholderText="https://api.example.com"/>
+
+            <Button Grid.Row="1"
+                    Grid.Column="2"
+                    Width="42"
+                    MinWidth="42"
+                    Height="36"
+                    Padding="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center">
+                <PathIcon Width="20"
+                          Height="20"
+                          Data="M4,3 L18,10 L4,17 L7,10 Z"/>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              RowDefinitions="Auto,*"
+              Margin="0,0,0,16">
+            <TextBlock Text="Json data"
+                       FontWeight="SemiBold"/>
+            <TextBox Grid.Row="1"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Text="{Binding Body}"
+                     PlaceholderText="JSON body"/>
+        </Grid>
+
+        <Grid Grid.Row="3"
+              RowDefinitions="Auto,*">
+            <TextBlock Text="Response"
+                       FontWeight="SemiBold"/>
+            <TextBox Grid.Row="1"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Text="{Binding Response}"
+                     IsReadOnly="True"/>
+        </Grid>
+    </Grid>
+</UserControl>

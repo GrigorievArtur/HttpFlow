@@ -123,6 +123,7 @@ public sealed class ProjectSessionService
         {
             Id = nextTestId,
             Name = $"Test {nextTestId}",
+            Status = "Not started",
             Nodes = []
         };
 
@@ -175,6 +176,40 @@ public sealed class ProjectSessionService
             return false;
         }
 
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool UpdateTestName(int testId, string name)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        test.Name = string.IsNullOrWhiteSpace(name) ? $"Test {test.Id}" : name;
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool UpdateTestStatus(int testId, string status)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        test.Status = string.IsNullOrWhiteSpace(status) ? "Not started" : status;
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
@@ -427,6 +462,7 @@ public sealed class ProjectSessionService
             {
                 Id = 1,
                 Name = "Test 1",
+                Status = "Not started",
                 Nodes = session.Nodes
                     .OrderBy(node => node.Y)
                     .ThenBy(node => node.X)
@@ -436,6 +472,7 @@ public sealed class ProjectSessionService
 
         foreach (var test in session.Tests)
         {
+            test.Status = string.IsNullOrWhiteSpace(test.Status) ? "Not started" : test.Status;
             NormalizeNodeOrder(test);
         }
 

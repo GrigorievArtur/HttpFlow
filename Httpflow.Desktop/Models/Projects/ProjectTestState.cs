@@ -9,5 +9,7 @@ public sealed class ProjectTestState
 
     public string Name { get; set; } = string.Empty;
 
+    public string Status { get; set; } = "Not started";
+
     public List<CanvasNodeRecord> Nodes { get; set; } = [];
 }

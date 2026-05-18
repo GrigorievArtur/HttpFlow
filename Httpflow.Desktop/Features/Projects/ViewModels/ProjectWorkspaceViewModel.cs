@@ -25,6 +25,9 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         _projectSessionService = projectSessionService;
         NodesPanel = new NodesPanelViewModel(projectSessionService);
         NodesPanel.NodeUpdated += OnPanelNodeUpdated;
+        NodesPanel.NodeDeleted += OnPanelNodeDeleted;
+        NodesPanel.TestUpdated += OnPanelTestUpdated;
+        NodesPanel.TestDeleted += OnPanelTestDeleted;
     }
 
     public GridLength SidebarWidth => new(IsSidebarOpen ? 392 : 0);
@@ -117,7 +120,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         _app.SelectedNode = null;
-        NodesPanel.SetSelectedNode(null);
+        NodesPanel.SetSelectedTest(Tests.FirstOrDefault(test => test.Id == testId));
         OnPropertyChanged(nameof(SelectedTestId));
         OnPropertyChanged(nameof(SelectedNode));
     }
@@ -251,6 +254,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
             Tests.Add(new WorkspaceTestColumnViewModel(
                 test.Id,
                 string.IsNullOrWhiteSpace(test.Name) ? $"Test {test.Id}" : test.Name,
+                string.IsNullOrWhiteSpace(test.Status) ? "Not started" : test.Status,
                 BuildNodeViewModels(test.Id, test.Nodes)));
         }
 
@@ -270,6 +274,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         else
         {
             _app.SelectedNode = null;
+            NodesPanel.SetSelectedTest(null);
         }
     }
 
@@ -307,9 +312,63 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         return null;
     }
 
+    private int? GetTestSelectionAfterDelete(int testId)
+    {
+        var index = Tests.ToList().FindIndex(test => test.Id == testId);
+        if (index > 0)
+        {
+            return Tests[index - 1].Id;
+        }
+
+        if (index == 0 && Tests.Count > 1)
+        {
+            return Tests[1].Id;
+        }
+
+        return null;
+    }
+
     private void OnPanelNodeUpdated(int testId, int nodeId)
     {
         LoadSession(_projectSessionService.CurrentProject);
         SelectNode(testId, nodeId);
+    }
+
+    private void OnPanelNodeDeleted(int testId, int nodeId)
+    {
+        var nextSelection = GetNodeSelectionBefore(testId, nodeId);
+        LoadSession(_projectSessionService.CurrentProject);
+
+        if (nextSelection is { } nextNode &&
+            Tests.SelectMany(test => test.Nodes).Any(node => node.TestId == nextNode.TestId && node.Id == nextNode.NodeId))
+        {
+            SelectNode(nextNode.TestId, nextNode.NodeId);
+            return;
+        }
+
+        if (Tests.Any(test => test.Id == testId))
+        {
+            SelectTest(testId);
+        }
+    }
+
+    private void OnPanelTestUpdated(int testId)
+    {
+        LoadSession(_projectSessionService.CurrentProject);
+        if (Tests.Any(test => test.Id == testId))
+        {
+            SelectTest(testId);
+        }
+    }
+
+    private void OnPanelTestDeleted(int testId)
+    {
+        var nextTestId = GetTestSelectionAfterDelete(testId);
+        LoadSession(_projectSessionService.CurrentProject);
+
+        if (nextTestId is not null && Tests.Any(test => test.Id == nextTestId))
+        {
+            SelectTest(nextTestId.Value);
+        }
     }
 }

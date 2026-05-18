@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.Features.NodesPanel.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="392" d:DesignHeight="680"
+             x:DataType="vm:TestDetailsPanelViewModel"
+             x:Class="Httpflow.Desktop.Features.NodesPanel.Views.TestDetailsPanelView">
+    <Grid RowDefinitions="Auto,Auto,Auto,*"
+          RowSpacing="20">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="12">
+            <TextBox Text="{Binding TestName}"
+                     PlaceholderText="Test Name"
+                     FontSize="22"
+                     FontWeight="SemiBold"/>
+
+            <Button Grid.Column="1"
+                    Width="36"
+                    Height="36"
+                    Padding="0"
+                    IsEnabled="{Binding CanDeleteTest}"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding DeleteSelectedTestCommand}">
+                <PathIcon Width="14"
+                          Height="14"
+                          Data="M4,6 H16 M7,6 V4 H13 V6 M7,8 V16 M10,8 V16 M13,8 V16 M5,6 L6,18 H14 L15,6"/>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="140,*"
+              RowDefinitions="Auto,Auto"
+              RowSpacing="12">
+            <TextBlock Text="Nodes"
+                       FontWeight="SemiBold"/>
+            <TextBlock Grid.Column="1"
+                       Text="{Binding NodeCount}"/>
+
+            <TextBlock Grid.Row="1"
+                       Text="Status"
+                       FontWeight="SemiBold"/>
+            <ComboBox Grid.Row="1"
+                      Grid.Column="1"
+                      Width="160"
+                      HorizontalAlignment="Left"
+                      ItemsSource="{Binding Statuses}"
+                      SelectedItem="{Binding Status}"/>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="12"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="0">
+            <TextBlock Text="{Binding Status}"
+                       FontWeight="SemiBold"/>
+        </Border>
+    </Grid>
+</UserControl>
