@@ -19,6 +19,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
 {
     private readonly App _app;
     private readonly ProjectSessionService _projectSessionService;
+    private CanvasNodeRecord? _nodeClipboard;
 
     public ProjectWorkspaceViewModel(App app, ProjectSessionService projectSessionService)
     {
@@ -29,6 +30,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         NodesPanel.NodeDeleted += OnPanelNodeDeleted;
         NodesPanel.TestUpdated += OnPanelTestUpdated;
         NodesPanel.TestDeleted += OnPanelTestDeleted;
+        NodesPanel.TestImported += OnPanelTestImported;
         _app.ProjectTestRunner.ProgressChanged += OnRunProgressChanged;
     }
 
@@ -171,14 +173,16 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
 
     public WorkspaceNodeCardViewModel? AddNodeToActiveSelection()
     {
-        var testId = SelectedNode?.TestId ?? SelectedTestId;
-        return testId is null ? null : AddNodeToTest(testId.Value, NodeTypeNames.Request);
+        return AddNodeToActiveSelection(NodeTypeNames.Request);
     }
 
     public WorkspaceNodeCardViewModel? AddNodeToActiveSelection(string nodeType)
     {
-        var testId = SelectedNode?.TestId ?? SelectedTestId;
-        return testId is null ? null : AddNodeToTest(testId.Value, nodeType);
+        return SelectedNode is { } selectedNode
+            ? InsertNodeAfter(selectedNode, nodeType)
+            : SelectedTestId is { } testId
+                ? AddNodeToTest(testId, nodeType)
+                : null;
     }
 
     public WorkspaceNodeCardViewModel? AddNodeToTest(int testId, string nodeType)
@@ -186,6 +190,86 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         var node = _projectSessionService.AddNode(testId, nodeType);
         LoadSession(_projectSessionService.CurrentProject);
         SelectNode(testId, node.Id);
+        return SelectedNode;
+    }
+
+    public WorkspaceNodeCardViewModel? InsertNodeAfter(WorkspaceNodeCardViewModel targetNode, string nodeType)
+    {
+        var node = _projectSessionService.InsertNodeAfter(targetNode.TestId, targetNode.Id, nodeType);
+        if (node is null)
+        {
+            return null;
+        }
+
+        LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(targetNode.TestId, node.Id);
+        return SelectedNode;
+    }
+
+    public WorkspaceNodeCardViewModel? InsertNodeBefore(WorkspaceNodeCardViewModel targetNode, string nodeType)
+    {
+        var node = _projectSessionService.InsertNodeBefore(targetNode.TestId, targetNode.Id, nodeType);
+        if (node is null)
+        {
+            return null;
+        }
+
+        LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(targetNode.TestId, node.Id);
+        return SelectedNode;
+    }
+
+    public void CopyNode(WorkspaceNodeCardViewModel node)
+    {
+        _nodeClipboard = node.Node;
+        SelectNode(node.TestId, node.Id);
+    }
+
+    public void CutNode(WorkspaceNodeCardViewModel node)
+    {
+        _nodeClipboard = node.Node;
+        DeleteNode(node);
+    }
+
+    public WorkspaceNodeCardViewModel? PasteNodeAfter(WorkspaceNodeCardViewModel? targetNode = null)
+    {
+        if (_nodeClipboard is null)
+        {
+            return null;
+        }
+
+        targetNode ??= SelectedNode;
+        CanvasNodeRecord? node = null;
+        var testId = targetNode?.TestId ?? SelectedTestId;
+        if (targetNode is not null)
+        {
+            node = _projectSessionService.PasteNodeAfter(targetNode.TestId, targetNode.Id, _nodeClipboard);
+        }
+        else if (testId is not null)
+        {
+            node = _projectSessionService.PasteNodeAtEnd(testId.Value, _nodeClipboard);
+        }
+
+        if (node is null || testId is null)
+        {
+            return null;
+        }
+
+        LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(testId.Value, node.Id);
+        return SelectedNode;
+    }
+
+    public WorkspaceNodeCardViewModel? DuplicateNode(WorkspaceNodeCardViewModel node)
+    {
+        var duplicatedNode = _projectSessionService.DuplicateNodeAfter(node.TestId, node.Id);
+        if (duplicatedNode is null)
+        {
+            return null;
+        }
+
+        LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(node.TestId, duplicatedNode.Id);
         return SelectedNode;
     }
 
@@ -395,6 +479,15 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         if (nextTestId is not null && Tests.Any(test => test.Id == nextTestId))
         {
             SelectTest(nextTestId.Value);
+        }
+    }
+
+    private void OnPanelTestImported(int testId)
+    {
+        LoadSession(_projectSessionService.CurrentProject);
+        if (Tests.Any(test => test.Id == testId))
+        {
+            SelectTest(testId);
         }
     }
 

@@ -164,6 +164,29 @@
                                                                                 PointerEntered="OnNodeCardPointerEnter"
                                                                                 PointerReleased="OnNodeCardPointerReleased"
                                                                                 Tag="{Binding}">
+                                                                            <Border.ContextMenu>
+                                                                                <ContextMenu>
+                                                                                    <MenuItem Header="Copy    Ctrl+C"
+                                                                                              Click="OnCopyNodeMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                    <MenuItem Header="Paste    Ctrl+V"
+                                                                                              Click="OnPasteNodeMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                    <MenuItem Header="Cut    Ctrl+X"
+                                                                                              Click="OnCutNodeMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                    <MenuItem Header="Duplicate    Ctrl+D"
+                                                                                              Click="OnDuplicateNodeMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                    <Separator/>
+                                                                                    <MenuItem Header="Insert Before"
+                                                                                              Click="OnInsertNodeBeforeMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                    <MenuItem Header="Insert After    Space"
+                                                                                              Click="OnInsertNodeAfterMenuItemClick"
+                                                                                              Tag="{Binding}"/>
+                                                                                </ContextMenu>
+                                                                            </Border.ContextMenu>
                                                                             <StackPanel Spacing="8">
                                                                                 <Grid ColumnDefinitions="*,Auto"
                                                                                       ColumnSpacing="8">

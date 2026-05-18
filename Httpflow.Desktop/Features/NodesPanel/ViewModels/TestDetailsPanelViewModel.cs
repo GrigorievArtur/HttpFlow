@@ -21,6 +21,8 @@ public partial class TestDetailsPanelViewModel : ObservableObject
 
     public event Action<int>? TestDeleted;
 
+    public event Action<int>? TestImported;
+
     [ObservableProperty]
     private string testName = string.Empty;
 
@@ -35,6 +37,8 @@ public partial class TestDetailsPanelViewModel : ObservableObject
 
     [ObservableProperty]
     private bool canDeleteTest;
+
+    public string ImportExportDescription => "Move this test between projects as JSON. Export keeps the test definition; import adds it as a new test with fresh ids.";
 
     [RelayCommand]
     private void DeleteSelectedTest()
@@ -67,6 +71,25 @@ public partial class TestDetailsPanelViewModel : ObservableObject
         {
             _isLoadingTest = false;
         }
+    }
+
+    public string? ExportSelectedTestJson()
+    {
+        return _selectedTestId is { } testId
+            ? _projectSessionService.ExportTestToJson(testId)
+            : null;
+    }
+
+    public int? ImportTestJson(string json)
+    {
+        var test = _projectSessionService.ImportTestFromJson(json);
+        if (test is null)
+        {
+            return null;
+        }
+
+        TestImported?.Invoke(test.Id);
+        return test.Id;
     }
 
     partial void OnTestNameChanged(string value)

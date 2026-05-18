@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Httpflow.Desktop.Features.Projects.ViewModels;
@@ -182,10 +183,13 @@ public partial class ProjectWorkspaceView : UserControl
 
         if (TryGetNode(sender, out var node))
         {
-            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
             _viewModel.SelectNode(node.TestId, node.Id);
             Focus();
-            e.Handled = true;
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
+                e.Handled = true;
+            }
         }
     }
 
@@ -231,6 +235,46 @@ public partial class ProjectWorkspaceView : UserControl
 
     private async void OnWorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            switch (e.Key)
+            {
+                case Key.C:
+                    if (_viewModel.SelectedNode is { } nodeToCopy)
+                    {
+                        _viewModel.CopyNode(nodeToCopy);
+                        e.Handled = true;
+                    }
+                    return;
+
+                case Key.X:
+                    if (_viewModel.SelectedNode is { } nodeToCut)
+                    {
+                        _viewModel.CutNode(nodeToCut);
+                        ScrollSelectedNodeIntoView();
+                        e.Handled = true;
+                    }
+                    return;
+
+                case Key.V:
+                    if (_viewModel.PasteNodeAfter() is not null)
+                    {
+                        ScrollSelectedNodeIntoView();
+                        e.Handled = true;
+                    }
+                    return;
+
+                case Key.D:
+                    if (_viewModel.SelectedNode is { } nodeToDuplicate &&
+                        _viewModel.DuplicateNode(nodeToDuplicate) is not null)
+                    {
+                        ScrollSelectedNodeIntoView();
+                        e.Handled = true;
+                    }
+                    return;
+            }
+        }
+
         switch (e.Key)
         {
             case Key.Space:
@@ -276,6 +320,65 @@ public partial class ProjectWorkspaceView : UserControl
         e.Handled = true;
     }
 
+    private void OnCopyNodeMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node))
+        {
+            _viewModel.CopyNode(node);
+            Focus();
+        }
+    }
+
+    private void OnCutNodeMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node))
+        {
+            _viewModel.CutNode(node);
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+    }
+
+    private void OnPasteNodeMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node) && _viewModel.PasteNodeAfter(node) is not null)
+        {
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+    }
+
+    private void OnDuplicateNodeMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node) && _viewModel.DuplicateNode(node) is not null)
+        {
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+    }
+
+    private async void OnInsertNodeBeforeMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node) &&
+            await PickNodeTypeAsync() is { } nodeType &&
+            _viewModel.InsertNodeBefore(node, nodeType) is not null)
+        {
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+    }
+
+    private async void OnInsertNodeAfterMenuItemClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node) &&
+            await PickNodeTypeAsync() is { } nodeType &&
+            _viewModel.InsertNodeAfter(node, nodeType) is not null)
+        {
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+    }
+
     private async Task<string?> PickNodeTypeAsync()
     {
         var picker = new NodePickerWindow();
@@ -308,6 +411,20 @@ public partial class ProjectWorkspaceView : UserControl
         {
             node = viewModel;
             return true;
+        }
+
+        if (sender is MenuItem menuItem)
+        {
+            var contextMenu = menuItem
+                .GetLogicalAncestors()
+                .OfType<ContextMenu>()
+                .FirstOrDefault();
+
+            if (contextMenu?.PlacementTarget is Control { Tag: WorkspaceNodeCardViewModel placementNode })
+            {
+                node = placementNode;
+                return true;
+            }
         }
 
         node = null!;

@@ -25,6 +25,7 @@ public partial class NodesPanelViewModel : ObservableObject
         _expectedNodePanel.NodeDeleted += (testId, nodeId) => NodeDeleted?.Invoke(testId, nodeId);
         _testDetailsPanel.TestUpdated += testId => TestUpdated?.Invoke(testId);
         _testDetailsPanel.TestDeleted += testId => TestDeleted?.Invoke(testId);
+        _testDetailsPanel.TestImported += testId => TestImported?.Invoke(testId);
 
         ActivePanel = _emptyPanel;
     }
@@ -36,6 +37,8 @@ public partial class NodesPanelViewModel : ObservableObject
     public event Action<int>? TestUpdated;
 
     public event Action<int>? TestDeleted;
+
+    public event Action<int>? TestImported;
 
     [ObservableProperty]
     private object activePanel;

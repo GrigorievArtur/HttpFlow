@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -82,16 +83,19 @@ public partial class NodePickerWindow : Window
 
     private static int GetFuzzyScore(string value, string query)
     {
-        if (string.IsNullOrWhiteSpace(query))
+        var normalizedValue = NormalizeSearchText(value);
+        var normalizedQuery = NormalizeSearchText(query);
+
+        if (normalizedQuery.Length == 0)
         {
             return 1;
         }
 
         var score = 0;
         var queryIndex = 0;
-        for (var valueIndex = 0; valueIndex < value.Length && queryIndex < query.Length; valueIndex++)
+        for (var valueIndex = 0; valueIndex < normalizedValue.Length && queryIndex < normalizedQuery.Length; valueIndex++)
         {
-            if (char.ToUpperInvariant(value[valueIndex]) != char.ToUpperInvariant(query[queryIndex]))
+            if (normalizedValue[valueIndex] != normalizedQuery[queryIndex])
             {
                 continue;
             }
@@ -100,6 +104,20 @@ public partial class NodePickerWindow : Window
             queryIndex++;
         }
 
-        return queryIndex == query.Length ? score : -1;
+        return queryIndex == normalizedQuery.Length ? score : -1;
+    }
+
+    private static string NormalizeSearchText(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            if (!char.IsWhiteSpace(character))
+            {
+                builder.Append(char.ToLowerInvariant(character));
+            }
+        }
+
+        return builder.ToString();
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,12 @@ public sealed class ProjectSessionService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
         WriteIndented = false
+    };
+    private static readonly JsonSerializerOptions ExportJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true
     };
 
     private readonly App _app;
@@ -134,7 +141,18 @@ public sealed class ProjectSessionService
         return test;
     }
 
-    public CanvasNodeRecord AddNode(int testId, string nodeType = NodeTypeNames.Request)
+    public CanvasNodeRecord AddNode(string nodeType = NodeTypeNames.Request)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var testId = CurrentProject!.Tests.FirstOrDefault()?.Id
+            ?? throw new InvalidOperationException("No test is available.");
+
+        return AddNode(testId, nodeType);
+    }
+
+    public CanvasNodeRecord AddNode(int testId, string nodeType = NodeTypeNames.Request, int? insertIndex = null)
     {
         EnsureProjectLoaded();
         EnsureTestsInitialized(CurrentProject!);
@@ -146,20 +164,82 @@ public sealed class ProjectSessionService
         }
 
         var nextNodeId = GetNextNodeId(CurrentProject);
-        var nodeOrder = test.Nodes.Count + 1;
+        var normalizedInsertIndex = Math.Clamp(insertIndex ?? test.Nodes.Count, 0, test.Nodes.Count);
+        var nodeOrder = normalizedInsertIndex + 1;
         var node = new CanvasNodeRecord(
             nextNodeId,
             $"{nodeType} {nodeOrder}",
             nodeType,
             0,
-            test.Nodes.Count,
+            normalizedInsertIndex,
             CreateDefaultValues(nodeType, nodeOrder));
 
-        test.Nodes.Add(node);
+        test.Nodes.Insert(normalizedInsertIndex, node);
         NormalizeNodeOrder(test);
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return node;
+    }
+
+    public CanvasNodeRecord? InsertNodeAfter(int testId, int targetNodeId, string nodeType)
+    {
+        var index = GetNodeIndex(testId, targetNodeId);
+        return index < 0 ? null : AddNode(testId, nodeType, index + 1);
+    }
+
+    public CanvasNodeRecord? InsertNodeBefore(int testId, int targetNodeId, string nodeType)
+    {
+        var index = GetNodeIndex(testId, targetNodeId);
+        return index < 0 ? null : AddNode(testId, nodeType, index);
+    }
+
+    public CanvasNodeRecord? DuplicateNodeAfter(int testId, int sourceNodeId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return null;
+        }
+
+        var sourceIndex = test.Nodes.FindIndex(node => node.Id == sourceNodeId);
+        if (sourceIndex < 0)
+        {
+            return null;
+        }
+
+        return InsertNodeCopy(test, test.Nodes[sourceIndex], sourceIndex + 1);
+    }
+
+    public CanvasNodeRecord? PasteNodeAfter(int testId, int targetNodeId, CanvasNodeRecord clipboardNode)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return null;
+        }
+
+        var targetIndex = test.Nodes.FindIndex(node => node.Id == targetNodeId);
+        if (targetIndex < 0)
+        {
+            return null;
+        }
+
+        return InsertNodeCopy(test, clipboardNode, targetIndex + 1);
+    }
+
+    public CanvasNodeRecord? PasteNodeAtEnd(int testId, CanvasNodeRecord clipboardNode)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        return test is null ? null : InsertNodeCopy(test, clipboardNode, test.Nodes.Count);
     }
 
     public bool DeleteTest(int testId)
@@ -181,6 +261,68 @@ public sealed class ProjectSessionService
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
+    }
+
+    public string? ExportTestToJson(int testId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        return test is null ? null : JsonSerializer.Serialize(test, ExportJsonOptions);
+    }
+
+    public ProjectTestState? ImportTestFromJson(string json)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        ProjectTestState? importedTest;
+        try
+        {
+            importedTest = JsonSerializer.Deserialize<ProjectTestState>(json, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        if (importedTest is null)
+        {
+            return null;
+        }
+
+        var nextTestId = CurrentProject!.Tests.Count == 0
+            ? 1
+            : CurrentProject.Tests.Max(test => test.Id) + 1;
+        var nextNodeId = GetNextNodeId(CurrentProject);
+
+        var test = new ProjectTestState
+        {
+            Id = nextTestId,
+            Name = string.IsNullOrWhiteSpace(importedTest.Name) ? $"Imported Test {nextTestId}" : importedTest.Name,
+            Order = CurrentProject.Tests.Count == 0 ? 1 : CurrentProject.Tests.Max(item => item.Order) + 1,
+            Status = "Not started",
+            Nodes = importedTest.Nodes
+                .OrderBy(node => node.Y)
+                .ThenBy(node => GetNodeOrder(node.Values))
+                .Select((node, index) => node with
+                {
+                    Id = nextNodeId++,
+                    Name = string.IsNullOrWhiteSpace(node.Name) ? $"Node {index + 1}" : node.Name,
+                    NodeType = string.IsNullOrWhiteSpace(node.NodeType) ? NodeTypeNames.Request : node.NodeType,
+                    X = 0,
+                    Y = index,
+                    Values = ResetRuntimeValues(node.Values, index + 1)
+                })
+                .ToList()
+        };
+
+        CurrentProject.Tests.Add(test);
+        NormalizeNodeOrder(test);
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return test;
     }
 
     public bool UpdateTestName(int testId, string name)
@@ -308,6 +450,63 @@ public sealed class ProjectSessionService
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
+    }
+
+    private int GetNodeIndex(int testId, int nodeId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        return test?.Nodes.FindIndex(node => node.Id == nodeId) ?? -1;
+    }
+
+    private CanvasNodeRecord InsertNodeCopy(ProjectTestState test, CanvasNodeRecord sourceNode, int insertIndex)
+    {
+        var normalizedInsertIndex = Math.Clamp(insertIndex, 0, test.Nodes.Count);
+        var nextNodeId = GetNextNodeId(CurrentProject!);
+        var node = sourceNode with
+        {
+            Id = nextNodeId,
+            Name = GetNextCopyName(test, sourceNode.Name),
+            X = 0,
+            Y = normalizedInsertIndex,
+            Values = ResetRuntimeValues(sourceNode.Values, normalizedInsertIndex + 1)
+        };
+
+        test.Nodes.Insert(normalizedInsertIndex, node);
+        NormalizeNodeOrder(test);
+        SyncLegacyNodes(CurrentProject!);
+        MarkDirty();
+        return node;
+    }
+
+    private static string GetNextCopyName(ProjectTestState test, string sourceName)
+    {
+        var baseName = Regex.Replace(sourceName, @"\s+Copy(?:\s+\(\d+\))?$", string.Empty, RegexOptions.IgnoreCase).Trim();
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            baseName = "Node";
+        }
+
+        var existingNames = test.Nodes
+            .Select(node => node.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var firstCopyName = $"{baseName} Copy";
+        if (!existingNames.Contains(firstCopyName))
+        {
+            return firstCopyName;
+        }
+
+        for (var index = 2; ; index++)
+        {
+            var candidate = $"{baseName} Copy ({index})";
+            if (!existingNames.Contains(candidate))
+            {
+                return candidate;
+            }
+        }
     }
 
     public bool UpdateNodeName(int testId, int nodeId, string name)
@@ -589,6 +788,33 @@ public sealed class ProjectSessionService
         var updated = values
             .Where(value => !string.Equals(value.Label, "Order", StringComparison.OrdinalIgnoreCase))
             .ToList();
+        updated.Add(new NodeValueRecord("Order", order.ToString()));
+        return updated;
+    }
+
+    private static int GetNodeOrder(IReadOnlyList<NodeValueRecord> values)
+    {
+        var orderValue = values.FirstOrDefault(value => string.Equals(value.Label, "Order", StringComparison.OrdinalIgnoreCase))?.Value;
+        return int.TryParse(orderValue, out var order) ? order : 0;
+    }
+
+    private static IReadOnlyList<NodeValueRecord> ResetRuntimeValues(IReadOnlyList<NodeValueRecord> values, int order)
+    {
+        var runtimeLabels = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ActualCode",
+            "Error",
+            "Response",
+            "Status",
+            "StatusCode"
+        };
+
+        var updated = values
+            .Where(value => !runtimeLabels.Contains(value.Label) &&
+                            !string.Equals(value.Label, "Order", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        updated.Add(new NodeValueRecord("Status", "Draft"));
         updated.Add(new NodeValueRecord("Order", order.ToString()));
         return updated;
     }
