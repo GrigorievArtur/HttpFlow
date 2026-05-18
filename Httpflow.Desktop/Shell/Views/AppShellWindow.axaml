@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Httpflow.Desktop.Shell.Controls"
+        xmlns:shellVm="using:Httpflow.Desktop.Shell.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
@@ -11,11 +12,76 @@
         Height="760"
         MinWidth="960"
         MinHeight="680">
+    <Grid>
+        <DockPanel>
+            <controls:AppNavigationBar x:Name="NavigationBar"
+                                DockPanel.Dock="Top"/>
 
-    <DockPanel>
-        <controls:AppNavigationBar x:Name="NavigationBar"
-                            DockPanel.Dock="Top"/>
+            <ContentControl x:Name="MainContent"/>
+        </DockPanel>
 
-        <ContentControl x:Name="MainContent"/>
-    </DockPanel>
+        <ItemsControl x:Name="NotificationList"
+                      Margin="0,0,18,18"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="10"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="shellVm:ShellNotificationViewModel">
+                    <Grid Width="330">
+                        <Border Padding="14"
+                                Background="#FFF2F2"
+                                BorderBrush="#D94A4A"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                IsVisible="{Binding IsError}">
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10">
+                                <PathIcon Width="18"
+                                          Height="18"
+                                          Foreground="#B3261E"
+                                          Data="M10,2 L18,18 H2 Z M9,7 H11 V12 H9 Z M9,14 H11 V16 H9 Z"/>
+                                <StackPanel Grid.Column="1"
+                                            Spacing="4">
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="#8A1F17"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Message}"
+                                               Foreground="#8A1F17"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Padding="14"
+                                Background="#F0FFF6"
+                                BorderBrush="#3DBB7D"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                IsVisible="{Binding IsInfo}">
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10">
+                                <PathIcon Width="18"
+                                          Height="18"
+                                          Foreground="#207A4B"
+                                          Data="M8,13 L4,9 L2.5,10.5 L8,16 L18,6 L16.5,4.5 Z"/>
+                                <StackPanel Grid.Column="1"
+                                            Spacing="4">
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="#145C36"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Message}"
+                                               Foreground="#145C36"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
 </Window>

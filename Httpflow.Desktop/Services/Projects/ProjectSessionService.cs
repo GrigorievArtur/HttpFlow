@@ -123,6 +123,7 @@ public sealed class ProjectSessionService
         {
             Id = nextTestId,
             Name = $"Test {nextTestId}",
+            Order = CurrentProject.Tests.Count == 0 ? 1 : CurrentProject.Tests.Max(item => item.Order) + 1,
             Status = "Not started",
             Nodes = []
         };
@@ -133,7 +134,7 @@ public sealed class ProjectSessionService
         return test;
     }
 
-    public CanvasNodeRecord AddNode(int testId)
+    public CanvasNodeRecord AddNode(int testId, string nodeType = NodeTypeNames.Request)
     {
         EnsureProjectLoaded();
         EnsureTestsInitialized(CurrentProject!);
@@ -145,13 +146,14 @@ public sealed class ProjectSessionService
         }
 
         var nextNodeId = GetNextNodeId(CurrentProject);
+        var nodeOrder = test.Nodes.Count + 1;
         var node = new CanvasNodeRecord(
             nextNodeId,
-            $"Node {test.Nodes.Count + 1}",
-            "Request",
+            $"{nodeType} {nodeOrder}",
+            nodeType,
             0,
             test.Nodes.Count,
-            CreateDefaultValues(test.Nodes.Count + 1));
+            CreateDefaultValues(nodeType, nodeOrder));
 
         test.Nodes.Add(node);
         NormalizeNodeOrder(test);
@@ -210,6 +212,23 @@ public sealed class ProjectSessionService
         }
 
         test.Status = string.IsNullOrWhiteSpace(status) ? "Not started" : status;
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool UpdateTestOrder(int testId, int order)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        test.Order = Math.Max(1, order);
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
@@ -462,6 +481,7 @@ public sealed class ProjectSessionService
             {
                 Id = 1,
                 Name = "Test 1",
+                Order = 1,
                 Status = "Not started",
                 Nodes = session.Nodes
                     .OrderBy(node => node.Y)
@@ -470,8 +490,10 @@ public sealed class ProjectSessionService
             });
         }
 
-        foreach (var test in session.Tests)
+        for (var index = 0; index < session.Tests.Count; index++)
         {
+            var test = session.Tests[index];
+            test.Order = test.Order <= 0 ? index + 1 : test.Order;
             test.Status = string.IsNullOrWhiteSpace(test.Status) ? "Not started" : test.Status;
             NormalizeNodeOrder(test);
         }
@@ -492,7 +514,14 @@ public sealed class ProjectSessionService
         return allNodes.Any() ? allNodes.Max(node => node.Id) + 1 : 1;
     }
 
-    private static IReadOnlyList<NodeValueRecord> CreateDefaultValues(int order)
+    private static IReadOnlyList<NodeValueRecord> CreateDefaultValues(string nodeType, int order)
+    {
+        return nodeType == NodeTypeNames.Expected
+            ? CreateExpectedDefaultValues(order)
+            : CreateRequestDefaultValues(order);
+    }
+
+    private static IReadOnlyList<NodeValueRecord> CreateRequestDefaultValues(int order)
     {
         return
         [
@@ -500,6 +529,22 @@ public sealed class ProjectSessionService
             new NodeValueRecord("Url", "https://api.example.com"),
             new NodeValueRecord("Body", string.Empty),
             new NodeValueRecord("Response", string.Empty),
+            new NodeValueRecord("StatusCode", string.Empty),
+            new NodeValueRecord("Error", string.Empty),
+            new NodeValueRecord("Status", "Draft"),
+            new NodeValueRecord("Order", order.ToString())
+        ];
+    }
+
+    private static IReadOnlyList<NodeValueRecord> CreateExpectedDefaultValues(int order)
+    {
+        return
+        [
+            new NodeValueRecord("ExpectedCode", "200"),
+            new NodeValueRecord("ThrowbackError", "Expected response code did not match."),
+            new NodeValueRecord("ContinueTest", bool.TrueString),
+            new NodeValueRecord("ActualCode", string.Empty),
+            new NodeValueRecord("Error", string.Empty),
             new NodeValueRecord("Status", "Draft"),
             new NodeValueRecord("Order", order.ToString())
         ];
@@ -538,7 +583,7 @@ public sealed class ProjectSessionService
     {
         if (values.Count == 0)
         {
-            return CreateDefaultValues(order);
+            return CreateRequestDefaultValues(order);
         }
 
         var updated = values

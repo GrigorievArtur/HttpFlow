@@ -10,6 +10,7 @@ public partial class AppNavigationBar : UserControl
     public event EventHandler? ProjectsRequested;
     public event EventHandler? WorkspaceRequested;
     public event EventHandler? DashboardRequested;
+    public event EventHandler? RunRequested;
 
     public AppNavigationBar()
     {
@@ -34,5 +35,10 @@ public partial class AppNavigationBar : UserControl
     private void OnDashboardButtonClick(object? sender, RoutedEventArgs e)
     {
         DashboardRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnRunButtonClick(object? sender, RoutedEventArgs e)
+    {
+        RunRequested?.Invoke(this, EventArgs.Empty);
     }
 }

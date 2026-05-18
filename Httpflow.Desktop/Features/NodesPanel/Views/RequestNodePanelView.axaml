@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="392" d:DesignHeight="680"
              x:DataType="vm:RequestNodePanelViewModel"
              x:Class="Httpflow.Desktop.Features.NodesPanel.Views.RequestNodePanelView">
-    <Grid RowDefinitions="Auto,Auto,*,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,*">
         <Grid ColumnDefinitions="*,Auto"
               ColumnSpacing="12">
             <TextBox Text="{Binding RequestName}"
@@ -76,6 +76,69 @@
         </Grid>
 
         <Grid Grid.Row="3"
+              Margin="0,0,0,16"
+              RowDefinitions="Auto,Auto,Auto"
+              RowSpacing="8">
+            <Border Padding="12"
+                    Background="#F0FFF6"
+                    BorderBrush="#3DBB7D"
+                    BorderThickness="1"
+                    CornerRadius="0"
+                    IsVisible="{Binding HasSuccessfulHttpResult}">
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10">
+                    <PathIcon Width="18"
+                              Height="18"
+                              Foreground="#207A4B"
+                              Data="M8,13 L4,9 L2.5,10.5 L8,16 L18,6 L16.5,4.5 Z"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding HttpResultText}"
+                               Foreground="#145C36"
+                               FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+
+            <Border Padding="12"
+                    Background="#FFF2F2"
+                    BorderBrush="#D94A4A"
+                    BorderThickness="1"
+                    CornerRadius="0"
+                    IsVisible="{Binding HasBadHttpResult}">
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10">
+                    <PathIcon Width="18"
+                              Height="18"
+                              Foreground="#B3261E"
+                              Data="M10,2 L18,18 H2 Z M9,7 H11 V12 H9 Z M9,14 H11 V16 H9 Z"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding HttpResultText}"
+                               Foreground="#8A1F17"
+                               FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+
+            <Border Padding="12"
+                    Background="#FFF2F2"
+                    BorderBrush="#D94A4A"
+                    BorderThickness="1"
+                    CornerRadius="0"
+                    IsVisible="{Binding HasError}">
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10">
+                    <PathIcon Width="18"
+                              Height="18"
+                              Foreground="#B3261E"
+                              Data="M10,2 L18,18 H2 Z M9,7 H11 V12 H9 Z M9,14 H11 V16 H9 Z"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Error}"
+                               TextWrapping="Wrap"
+                               Foreground="#8A1F17"
+                               FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="4"
               RowDefinitions="Auto,*">
             <TextBlock Text="Response"
                        FontWeight="SemiBold"/>

@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:Httpflow.Desktop.Features.Projects.Views"
+        mc:Ignorable="d" d:DesignWidth="540" d:DesignHeight="360"
+        x:Class="Httpflow.Desktop.Features.Projects.Views.NodePickerWindow"
+        Title="Add node"
+        Width="540"
+        Height="360"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+    <Border Padding="18"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+        <Grid RowDefinitions="Auto,*"
+              RowSpacing="14">
+            <TextBox x:Name="SearchBox"
+                     Height="44"
+                     FontSize="20"
+                     PlaceholderText="Search nodes"
+                     TextChanged="OnSearchTextChanged"
+                     KeyDown="OnSearchKeyDown"/>
+
+            <ItemsControl x:Name="ResultsList"
+                          Grid.Row="1">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="views:NodePickerItem">
+                        <Button HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Margin="0,0,0,8"
+                                Padding="12"
+                                Tag="{Binding}"
+                                Click="OnNodeButtonClick">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="1"
+                                           Margin="0,4,0,0"
+                                           Text="{Binding Description}"
+                                           FontSize="12"
+                                           Opacity="0.76"/>
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Border>
+</Window>

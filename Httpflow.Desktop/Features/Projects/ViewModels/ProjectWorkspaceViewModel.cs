@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Httpflow.Desktop.Features.NodesPanel.ViewModels;
@@ -28,6 +29,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         NodesPanel.NodeDeleted += OnPanelNodeDeleted;
         NodesPanel.TestUpdated += OnPanelTestUpdated;
         NodesPanel.TestDeleted += OnPanelTestDeleted;
+        _app.ProjectTestRunner.ProgressChanged += OnRunProgressChanged;
     }
 
     public GridLength SidebarWidth => new(IsSidebarOpen ? 392 : 0);
@@ -53,6 +55,23 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     [ObservableProperty]
     private string zoomDisplay = "100%";
 
+    [ObservableProperty]
+    private double runProgressMaximum = 1;
+
+    [ObservableProperty]
+    private double runProgressValue;
+
+    [ObservableProperty]
+    private string runProgressText = "No run yet";
+
+    [ObservableProperty]
+    private bool isRunProgressVisible;
+
+    [ObservableProperty]
+    private bool isRunProgressHealthy = true;
+
+    public bool IsRunProgressError => IsRunProgressVisible && !IsRunProgressHealthy;
+
     [RelayCommand]
     private void ToggleSidebar()
     {
@@ -70,7 +89,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     [RelayCommand]
     private void AddNode(int testId)
     {
-        AddNodeToTest(testId);
+        AddNodeToTest(testId, NodeTypeNames.Request);
     }
 
     [RelayCommand]
@@ -153,12 +172,18 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     public WorkspaceNodeCardViewModel? AddNodeToActiveSelection()
     {
         var testId = SelectedNode?.TestId ?? SelectedTestId;
-        return testId is null ? null : AddNodeToTest(testId.Value);
+        return testId is null ? null : AddNodeToTest(testId.Value, NodeTypeNames.Request);
     }
 
-    public WorkspaceNodeCardViewModel? AddNodeToTest(int testId)
+    public WorkspaceNodeCardViewModel? AddNodeToActiveSelection(string nodeType)
     {
-        var node = _projectSessionService.AddNode(testId);
+        var testId = SelectedNode?.TestId ?? SelectedTestId;
+        return testId is null ? null : AddNodeToTest(testId.Value, nodeType);
+    }
+
+    public WorkspaceNodeCardViewModel? AddNodeToTest(int testId, string nodeType)
+    {
+        var node = _projectSessionService.AddNode(testId, nodeType);
         LoadSession(_projectSessionService.CurrentProject);
         SelectNode(testId, node.Id);
         return SelectedNode;
@@ -254,6 +279,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
             Tests.Add(new WorkspaceTestColumnViewModel(
                 test.Id,
                 string.IsNullOrWhiteSpace(test.Name) ? $"Test {test.Id}" : test.Name,
+                test.Order <= 0 ? 1 : test.Order,
                 string.IsNullOrWhiteSpace(test.Status) ? "Not started" : test.Status,
                 BuildNodeViewModels(test.Id, test.Nodes)));
         }
@@ -370,5 +396,30 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         {
             SelectTest(nextTestId.Value);
         }
+    }
+
+    partial void OnIsRunProgressHealthyChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsRunProgressError));
+    }
+
+    partial void OnIsRunProgressVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsRunProgressError));
+    }
+
+    private void OnRunProgressChanged(ProjectRunProgress progress)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            RunProgressMaximum = Math.Max(1, progress.TotalNodes);
+            RunProgressValue = progress.CompletedNodes;
+            RunProgressText = progress.TotalNodes == 0
+                ? progress.Message
+                : $"{progress.CompletedNodes}/{progress.TotalNodes} nodes";
+            IsRunProgressVisible = progress.IsRunning || progress.TotalNodes > 0;
+            IsRunProgressHealthy = !progress.HasError;
+            LoadSession(_projectSessionService.CurrentProject);
+        });
     }
 }

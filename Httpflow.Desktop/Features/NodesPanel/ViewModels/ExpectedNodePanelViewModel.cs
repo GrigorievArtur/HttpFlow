@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Httpflow.Desktop.Features.Projects.ViewModels;
@@ -8,14 +7,14 @@ using Httpflow.Desktop.Services.Projects;
 
 namespace Httpflow.Desktop.Features.NodesPanel.ViewModels;
 
-public partial class RequestNodePanelViewModel : ObservableObject
+public partial class ExpectedNodePanelViewModel : ObservableObject
 {
     private readonly ProjectSessionService _projectSessionService;
     private int? _selectedTestId;
     private int? _selectedNodeId;
     private bool _isLoadingNode;
 
-    public RequestNodePanelViewModel(ProjectSessionService projectSessionService)
+    public ExpectedNodePanelViewModel(ProjectSessionService projectSessionService)
     {
         _projectSessionService = projectSessionService;
     }
@@ -24,48 +23,26 @@ public partial class RequestNodePanelViewModel : ObservableObject
 
     public event Action<int, int>? NodeDeleted;
 
-    public IReadOnlyList<string> Methods { get; } = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+    [ObservableProperty]
+    private string nodeName = string.Empty;
 
     [ObservableProperty]
-    private string requestName = string.Empty;
+    private string expectedCode = "200";
 
     [ObservableProperty]
-    private string method = "GET";
+    private string throwbackError = string.Empty;
 
     [ObservableProperty]
-    private string url = string.Empty;
+    private bool continueTest = true;
 
     [ObservableProperty]
-    private string body = string.Empty;
-
-    [ObservableProperty]
-    private string response = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasHttpResult))]
-    [NotifyPropertyChangedFor(nameof(HasSuccessfulHttpResult))]
-    [NotifyPropertyChangedFor(nameof(HasBadHttpResult))]
-    [NotifyPropertyChangedFor(nameof(HttpResultText))]
-    private string statusCode = string.Empty;
+    private string actualCode = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
-    [NotifyPropertyChangedFor(nameof(HasHttpResult))]
-    [NotifyPropertyChangedFor(nameof(HasSuccessfulHttpResult))]
-    [NotifyPropertyChangedFor(nameof(HasBadHttpResult))]
     private string error = string.Empty;
 
     public bool HasError => !string.IsNullOrWhiteSpace(Error);
-
-    public bool HasHttpResult => !HasError && int.TryParse(StatusCode, out _);
-
-    public bool HasSuccessfulHttpResult => HasHttpResult && int.TryParse(StatusCode, out var statusCode) && statusCode is >= 200 and <= 399;
-
-    public bool HasBadHttpResult => HasHttpResult && !HasSuccessfulHttpResult;
-
-    public string HttpResultText => int.TryParse(StatusCode, out var statusCode)
-        ? $"HTTP {statusCode}"
-        : string.Empty;
 
     [RelayCommand]
     private void DeleteSelectedNode()
@@ -90,12 +67,13 @@ public partial class RequestNodePanelViewModel : ObservableObject
         try
         {
             var record = node.Node;
-            RequestName = record.Name;
-            Method = GetValue(record, "Method", "GET");
-            Url = GetValue(record, "Url", string.Empty);
-            Body = GetValue(record, "Body", string.Empty);
-            Response = GetValue(record, "Response", string.Empty);
-            StatusCode = GetValue(record, "StatusCode", string.Empty);
+            NodeName = record.Name;
+            ExpectedCode = GetValue(record, "ExpectedCode", "200");
+            ThrowbackError = GetValue(record, "ThrowbackError", string.Empty);
+            ContinueTest = bool.TryParse(GetValue(record, "ContinueTest", bool.TrueString), out var shouldContinue)
+                ? shouldContinue
+                : true;
+            ActualCode = GetValue(record, "ActualCode", string.Empty);
             Error = GetValue(record, "Error", string.Empty);
         }
         finally
@@ -104,24 +82,24 @@ public partial class RequestNodePanelViewModel : ObservableObject
         }
     }
 
-    partial void OnRequestNameChanged(string value)
+    partial void OnNodeNameChanged(string value)
     {
         UpdateSelectedNodeName(value);
     }
 
-    partial void OnMethodChanged(string value)
+    partial void OnExpectedCodeChanged(string value)
     {
-        UpdateSelectedNodeValue("Method", value);
+        UpdateSelectedNodeValue("ExpectedCode", value);
     }
 
-    partial void OnUrlChanged(string value)
+    partial void OnThrowbackErrorChanged(string value)
     {
-        UpdateSelectedNodeValue("Url", value);
+        UpdateSelectedNodeValue("ThrowbackError", value);
     }
 
-    partial void OnBodyChanged(string value)
+    partial void OnContinueTestChanged(bool value)
     {
-        UpdateSelectedNodeValue("Body", value);
+        UpdateSelectedNodeValue("ContinueTest", value.ToString());
     }
 
     private void UpdateSelectedNodeName(string value)

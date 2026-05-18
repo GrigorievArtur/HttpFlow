@@ -6,10 +6,16 @@ namespace Httpflow.Desktop.Features.Projects.ViewModels;
 
 public sealed partial class WorkspaceTestColumnViewModel : ObservableObject
 {
-    public WorkspaceTestColumnViewModel(int id, string name, string status, IEnumerable<WorkspaceNodeCardViewModel> nodes)
+    public WorkspaceTestColumnViewModel(
+        int id,
+        string name,
+        int order,
+        string status,
+        IEnumerable<WorkspaceNodeCardViewModel> nodes)
     {
         Id = id;
         Name = name;
+        Order = order;
         Status = status;
         Nodes = new ObservableCollection<WorkspaceNodeCardViewModel>(nodes);
     }
@@ -17,6 +23,8 @@ public sealed partial class WorkspaceTestColumnViewModel : ObservableObject
     public int Id { get; }
 
     public string Name { get; }
+
+    public int Order { get; }
 
     public string Status { get; }
 

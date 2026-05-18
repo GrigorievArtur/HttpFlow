@@ -27,6 +27,25 @@ public sealed partial class WorkspaceNodeCardViewModel : ObservableObject
 
     public string RequestMethod => GetValue("Method", "GET");
 
+    public string PrimaryInfo => NodeType == NodeTypeNames.Expected
+        ? $"Expect {GetValue("ExpectedCode", "200")}"
+        : RequestMethod;
+
+    public string SecondaryInfo
+    {
+        get
+        {
+            if (NodeType == NodeTypeNames.Expected)
+            {
+                return bool.TryParse(GetValue("ContinueTest", bool.TrueString), out var shouldContinue) && shouldContinue
+                    ? "Continue"
+                    : "Stop";
+            }
+
+            return Host;
+        }
+    }
+
     public string Host
     {
         get

@@ -11,6 +11,9 @@
         <DataTemplate DataType="vm:RequestNodePanelViewModel">
             <views:RequestNodePanelView/>
         </DataTemplate>
+        <DataTemplate DataType="vm:ExpectedNodePanelViewModel">
+            <views:ExpectedNodePanelView/>
+        </DataTemplate>
         <DataTemplate DataType="vm:TestDetailsPanelViewModel">
             <views:TestDetailsPanelView/>
         </DataTemplate>

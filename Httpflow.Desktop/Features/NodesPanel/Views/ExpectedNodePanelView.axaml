@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Httpflow.Desktop.Features.NodesPanel.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="392" d:DesignHeight="680"
+             x:DataType="vm:ExpectedNodePanelViewModel"
+             x:Class="Httpflow.Desktop.Features.NodesPanel.Views.ExpectedNodePanelView">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
+          RowSpacing="18">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="12">
+            <TextBox Text="{Binding NodeName}"
+                     PlaceholderText="Expected Node Name"
+                     FontSize="22"
+                     FontWeight="SemiBold"/>
+
+            <Button Grid.Column="1"
+                    Width="36"
+                    Height="36"
+                    Padding="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Command="{Binding DeleteSelectedNodeCommand}">
+                <PathIcon Width="14"
+                          Height="14"
+                          Data="M4,6 H16 M7,6 V4 H13 V6 M7,8 V16 M10,8 V16 M13,8 V16 M5,6 L6,18 H14 L15,6"/>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="140,*"
+              RowDefinitions="Auto,Auto,Auto"
+              RowSpacing="12">
+            <TextBlock Text="Expected code"
+                       FontWeight="SemiBold"/>
+            <TextBox Grid.Column="1"
+                     Width="96"
+                     HorizontalAlignment="Left"
+                     Text="{Binding ExpectedCode}"/>
+
+            <TextBlock Grid.Row="1"
+                       Text="Continue test?"
+                       FontWeight="SemiBold"/>
+            <CheckBox Grid.Row="1"
+                      Grid.Column="1"
+                      IsChecked="{Binding ContinueTest}"/>
+
+            <TextBlock Grid.Row="2"
+                       Text="Actual code"
+                       FontWeight="SemiBold"/>
+            <TextBlock Grid.Row="2"
+                       Grid.Column="1"
+                       Text="{Binding ActualCode}"/>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              RowDefinitions="Auto,*">
+            <TextBlock Text="Throwback error"
+                       FontWeight="SemiBold"/>
+            <TextBox Grid.Row="1"
+                     MinHeight="90"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Text="{Binding ThrowbackError}"/>
+        </Grid>
+
+        <Border Grid.Row="4"
+                Padding="12"
+                Background="#FFF2F2"
+                BorderBrush="#D94A4A"
+                BorderThickness="1"
+                CornerRadius="0"
+                IsVisible="{Binding HasError}">
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="10">
+                <PathIcon Width="18"
+                          Height="18"
+                          Foreground="#B3261E"
+                          Data="M10,2 L18,18 H2 Z M9,7 H11 V12 H9 Z M9,14 H11 V16 H9 Z"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Error}"
+                           TextWrapping="Wrap"
+                           Foreground="#8A1F17"
+                           FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

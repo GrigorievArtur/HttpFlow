@@ -1,19 +1,24 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Httpflow.Desktop.Features.Collaborators.Views;
 using Httpflow.Desktop.Features.Profile.Views;
 using Httpflow.Desktop.Features.Projects.Views;
 using Httpflow.Desktop.Models.Users;
+using Httpflow.Desktop.Services.Projects;
 using Httpflow.Desktop.Shell.Controls;
+using Httpflow.Desktop.Shell.ViewModels;
 
 namespace Httpflow.Desktop.Shell.Views;
 
 public partial class AppShellWindow : Window
 {
+    private readonly ObservableCollection<ShellNotificationViewModel> _notifications = [];
     private string _projectsQuickActionsText = "Quick actions";
     private UserProfile? _currentUser;
 
@@ -24,6 +29,9 @@ public partial class AppShellWindow : Window
         NavigationBar.ProjectsRequested += OnProjectsRequested;
         NavigationBar.DashboardRequested += OnDashboardRequested;
         NavigationBar.WorkspaceRequested += OnWorkspaceRequested;
+        NavigationBar.RunRequested += OnRunRequested;
+        NotificationList.ItemsSource = _notifications;
+        CurrentApp.ProjectTestRunner.NotificationRaised += OnRunNotificationRaised;
         Opened += OnOpened;
     }
 
@@ -39,7 +47,29 @@ public partial class AppShellWindow : Window
 
     private async void OnWorkspaceRequested(object? sender, EventArgs e)
     {
-        await EnsureAuthenticatedAsync();
+        if (await EnsureAuthenticatedAsync())
+        {
+            ShowWorkspacePage();
+        }
+    }
+
+    private async void OnRunRequested(object? sender, EventArgs e)
+    {
+        if (!await EnsureAuthenticatedAsync())
+        {
+            return;
+        }
+
+        if (CurrentApp.ProjectSessionService.CurrentProject is null && CurrentApp.CurrentProject is { } currentProject)
+        {
+            await CurrentApp.ProjectSessionService.LoadProjectById(currentProject.Id);
+        }
+
+        await CurrentApp.ProjectTestRunner.RunCurrentProjectAsync();
+        if (MainContent.Content is ProjectWorkspaceView workspaceView)
+        {
+            workspaceView.ReloadFromSession();
+        }
     }
 
     private async void OnProfileLogoutRequested(object? sender, EventArgs e)
@@ -143,5 +173,22 @@ public partial class AppShellWindow : Window
     {
         _currentUser = user;
         _projectsQuickActionsText = $"Quick actions for {user.Firstname} {user.Lastname}";
+    }
+
+    private void OnRunNotificationRaised(ProjectRunNotification notification)
+    {
+        Dispatcher.UIThread.Post(() => AddNotification(notification));
+    }
+
+    private async void AddNotification(ProjectRunNotification notification)
+    {
+        var viewModel = new ShellNotificationViewModel(
+            notification.Title,
+            notification.Message,
+            notification.IsError);
+
+        _notifications.Add(viewModel);
+        await Task.Delay(notification.IsError ? 6500 : 3800);
+        _notifications.Remove(viewModel);
     }
 }

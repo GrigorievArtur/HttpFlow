@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Httpflow.Desktop.Features.Projects.ViewModels;
@@ -22,13 +21,14 @@ public partial class TestDetailsPanelViewModel : ObservableObject
 
     public event Action<int>? TestDeleted;
 
-    public IReadOnlyList<string> Statuses { get; } = ["Not started", "Waiting", "Running"];
-
     [ObservableProperty]
     private string testName = string.Empty;
 
     [ObservableProperty]
     private string status = "Not started";
+
+    [ObservableProperty]
+    private string orderText = "1";
 
     [ObservableProperty]
     private int nodeCount;
@@ -58,6 +58,7 @@ public partial class TestDetailsPanelViewModel : ObservableObject
         try
         {
             TestName = test.Name;
+            OrderText = Math.Max(1, test.Order).ToString();
             Status = string.IsNullOrWhiteSpace(test.Status) ? "Not started" : test.Status;
             NodeCount = test.NodeCount;
             CanDeleteTest = _projectSessionService.CurrentProject?.Tests.Count > 1;
@@ -81,14 +82,14 @@ public partial class TestDetailsPanelViewModel : ObservableObject
         }
     }
 
-    partial void OnStatusChanged(string value)
+    partial void OnOrderTextChanged(string value)
     {
-        if (_isLoadingTest || _selectedTestId is not { } testId)
+        if (_isLoadingTest || _selectedTestId is not { } testId || !int.TryParse(value, out var order))
         {
             return;
         }
 
-        if (_projectSessionService.UpdateTestStatus(testId, value))
+        if (_projectSessionService.UpdateTestOrder(testId, order))
         {
             TestUpdated?.Invoke(testId);
         }

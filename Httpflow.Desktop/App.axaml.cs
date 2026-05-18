@@ -25,6 +25,7 @@ public partial class App : Application
     private ProjectsApiClient? _projectsApiClient;
     private CollaboratorsApiClient? _collaboratorsApiClient;
     private ProjectSessionService? _projectSession;
+    private ProjectTestRunnerService? _projectTestRunner;
     private readonly AppSettingsService _settingsService = new();
 
     public JwtSessionService JwtSessionService => _jwtSessionService;
@@ -37,6 +38,9 @@ public partial class App : Application
         _collaboratorsApiClient ??= new CollaboratorsApiClient(HttpClient);
 
     public ProjectSessionService ProjectSessionService => _projectSession ??= new ProjectSessionService(this);
+
+    public ProjectTestRunnerService ProjectTestRunner =>
+        _projectTestRunner ??= new ProjectTestRunnerService(ProjectSessionService);
 
     public AppThemeMode CurrentThemeMode => RequestedThemeVariant == ThemeVariant.Dark
         ? AppThemeMode.Dark

@@ -31,7 +31,7 @@
 
         <Grid Grid.Row="1"
               ColumnDefinitions="140,*"
-              RowDefinitions="Auto,Auto"
+              RowDefinitions="Auto,Auto,Auto"
               RowSpacing="12">
             <TextBlock Text="Nodes"
                        FontWeight="SemiBold"/>
@@ -39,14 +39,20 @@
                        Text="{Binding NodeCount}"/>
 
             <TextBlock Grid.Row="1"
+                       Text="Order"
+                       FontWeight="SemiBold"/>
+            <TextBox Grid.Row="1"
+                     Grid.Column="1"
+                     Width="88"
+                     HorizontalAlignment="Left"
+                     Text="{Binding OrderText}"/>
+
+            <TextBlock Grid.Row="2"
                        Text="Status"
                        FontWeight="SemiBold"/>
-            <ComboBox Grid.Row="1"
-                      Grid.Column="1"
-                      Width="160"
-                      HorizontalAlignment="Left"
-                      ItemsSource="{Binding Statuses}"
-                      SelectedItem="{Binding Status}"/>
+            <TextBlock Grid.Row="2"
+                       Grid.Column="1"
+                       Text="{Binding Status}"/>
         </Grid>
 
         <Border Grid.Row="2"

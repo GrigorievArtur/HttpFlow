@@ -1,6 +1,7 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Httpflow.Desktop.Features.Projects.ViewModels;
+using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Services.Projects;
 
 namespace Httpflow.Desktop.Features.NodesPanel.ViewModels;
@@ -8,16 +9,20 @@ namespace Httpflow.Desktop.Features.NodesPanel.ViewModels;
 public partial class NodesPanelViewModel : ObservableObject
 {
     private readonly RequestNodePanelViewModel _requestNodePanel;
+    private readonly ExpectedNodePanelViewModel _expectedNodePanel;
     private readonly TestDetailsPanelViewModel _testDetailsPanel;
     private readonly EmptyNodesPanelViewModel _emptyPanel = new();
 
     public NodesPanelViewModel(ProjectSessionService projectSessionService)
     {
         _requestNodePanel = new RequestNodePanelViewModel(projectSessionService);
+        _expectedNodePanel = new ExpectedNodePanelViewModel(projectSessionService);
         _testDetailsPanel = new TestDetailsPanelViewModel(projectSessionService);
 
         _requestNodePanel.NodeUpdated += (testId, nodeId) => NodeUpdated?.Invoke(testId, nodeId);
         _requestNodePanel.NodeDeleted += (testId, nodeId) => NodeDeleted?.Invoke(testId, nodeId);
+        _expectedNodePanel.NodeUpdated += (testId, nodeId) => NodeUpdated?.Invoke(testId, nodeId);
+        _expectedNodePanel.NodeDeleted += (testId, nodeId) => NodeDeleted?.Invoke(testId, nodeId);
         _testDetailsPanel.TestUpdated += testId => TestUpdated?.Invoke(testId);
         _testDetailsPanel.TestDeleted += testId => TestDeleted?.Invoke(testId);
 
@@ -40,6 +45,13 @@ public partial class NodesPanelViewModel : ObservableObject
         if (node is null)
         {
             ActivePanel = _emptyPanel;
+            return;
+        }
+
+        if (node.NodeType == NodeTypeNames.Expected)
+        {
+            _expectedNodePanel.SetSelectedNode(node);
+            ActivePanel = _expectedNodePanel;
             return;
         }
 

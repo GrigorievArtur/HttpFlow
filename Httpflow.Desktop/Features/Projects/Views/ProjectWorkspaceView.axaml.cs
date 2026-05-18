@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -33,6 +34,11 @@ public partial class ProjectWorkspaceView : UserControl
 
     private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
+        await ReloadProjectAsync();
+    }
+
+    public async Task ReloadProjectAsync()
+    {
         if (((App)Application.Current!).CurrentProject is not { } currentProject)
         {
             return;
@@ -42,6 +48,11 @@ public partial class ProjectWorkspaceView : UserControl
         _viewModel.ProjectTitle = string.IsNullOrWhiteSpace(currentProject.Name)
             ? $"Project #{currentProject.Id}"
             : currentProject.Name;
+        _viewModel.LoadSession(_projectSessionService.CurrentProject);
+    }
+
+    public void ReloadFromSession()
+    {
         _viewModel.LoadSession(_projectSessionService.CurrentProject);
     }
 
@@ -218,12 +229,13 @@ public partial class ProjectWorkspaceView : UserControl
         e.Handled = true;
     }
 
-    private void OnWorkspaceKeyDown(object? sender, KeyEventArgs e)
+    private async void OnWorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
         switch (e.Key)
         {
             case Key.Space:
-                if (_viewModel.AddNodeToActiveSelection() is not null)
+                if (await PickNodeTypeAsync() is { } activeNodeType &&
+                    _viewModel.AddNodeToActiveSelection(activeNodeType) is not null)
                 {
                     ScrollSelectedNodeIntoView();
                     e.Handled = true;
@@ -251,15 +263,31 @@ public partial class ProjectWorkspaceView : UserControl
         }
     }
 
-    private void OnAddNodeButtonClick(object? sender, RoutedEventArgs e)
+    private async void OnAddNodeButtonClick(object? sender, RoutedEventArgs e)
     {
-        if (TryGetTest(sender, out var test) && _viewModel.AddNodeToTest(test.Id) is not null)
+        if (TryGetTest(sender, out var test) &&
+            await PickNodeTypeAsync() is { } nodeType &&
+            _viewModel.AddNodeToTest(test.Id, nodeType) is not null)
         {
             Focus();
             ScrollSelectedNodeIntoView();
         }
 
         e.Handled = true;
+    }
+
+    private async Task<string?> PickNodeTypeAsync()
+    {
+        var picker = new NodePickerWindow();
+        var owner = TopLevel.GetTopLevel(this) as Window;
+        if (owner is null)
+        {
+            return null;
+        }
+
+        var accepted = await picker.ShowDialog<bool?>(owner);
+
+        return accepted == true ? picker.SelectedNodeType : null;
     }
 
     private static bool TryGetTest(object? sender, out WorkspaceTestColumnViewModel test)

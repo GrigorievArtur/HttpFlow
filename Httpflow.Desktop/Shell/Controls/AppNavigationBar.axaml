@@ -17,7 +17,8 @@
                     Click="OnDashboardButtonClick"/>
             <Button Content="Variables"/>
             <Button Content="Logs"/>
-            <Button Content="Run"/>
+            <Button Content="Run"
+                    Click="OnRunButtonClick"/>
         </StackPanel>
     </Border>
 </UserControl>
