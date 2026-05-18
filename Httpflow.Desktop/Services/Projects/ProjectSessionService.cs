@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
@@ -7,6 +9,7 @@ using Httpflow.Desktop.Dtos.Projects;
 using Httpflow.Desktop.Models.Api;
 using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Models.Projects;
+
 namespace Httpflow.Desktop.Services.Projects;
 
 public sealed class ProjectSessionService
@@ -107,39 +110,148 @@ public sealed class ProjectSessionService
         return result;
     }
 
-    public void UpsertNode(CanvasNodeRecord nodeRecord)
+    public ProjectTestState AddTest()
     {
         EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
 
-        var index = CurrentProject!.Nodes.FindIndex(node => node.Id == nodeRecord.Id);
-        if (index >= 0)
+        var nextTestId = CurrentProject!.Tests.Count == 0
+            ? 1
+            : CurrentProject.Tests.Max(test => test.Id) + 1;
+
+        var test = new ProjectTestState
         {
-            CurrentProject.Nodes[index] = nodeRecord;
-            MarkDirty();
-            return;
-        }
-
-        CurrentProject.Nodes.Add(nodeRecord);
-        MarkDirty();
-    }
-
-    public void MoveNode(int nodeId, int x, int y)
-    {
-        EnsureProjectLoaded();
-
-        var index = CurrentProject!.Nodes.FindIndex(node => node.Id == nodeId);
-        if (index < 0)
-        {
-            return;
-        }
-
-        CurrentProject.Nodes[index] = CurrentProject.Nodes[index] with
-        {
-            X = x,
-            Y = y
+            Id = nextTestId,
+            Name = $"Test {nextTestId}",
+            Nodes = []
         };
 
+        CurrentProject.Tests.Add(test);
+        SyncLegacyNodes(CurrentProject);
         MarkDirty();
+        return test;
+    }
+
+    public CanvasNodeRecord AddNode(int testId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            throw new InvalidOperationException($"Test with id {testId} was not found.");
+        }
+
+        var nextNodeId = GetNextNodeId(CurrentProject);
+        var node = new CanvasNodeRecord(
+            nextNodeId,
+            $"Node {test.Nodes.Count + 1}",
+            "Request",
+            0,
+            test.Nodes.Count,
+            CreateDefaultValues(test.Nodes.Count + 1));
+
+        test.Nodes.Add(node);
+        NormalizeNodeOrder(test);
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return node;
+    }
+
+    public bool DeleteTest(int testId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        if (CurrentProject!.Tests.Count <= 1)
+        {
+            return false;
+        }
+
+        var removed = CurrentProject.Tests.RemoveAll(test => test.Id == testId) > 0;
+        if (!removed)
+        {
+            return false;
+        }
+
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool MoveTest(int sourceTestId, int targetTestId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var sourceIndex = CurrentProject!.Tests.FindIndex(test => test.Id == sourceTestId);
+        var targetIndex = CurrentProject.Tests.FindIndex(test => test.Id == targetTestId);
+
+        if (sourceIndex < 0 || targetIndex < 0 || sourceIndex == targetIndex)
+        {
+            return false;
+        }
+
+        var test = CurrentProject.Tests[sourceIndex];
+        CurrentProject.Tests.RemoveAt(sourceIndex);
+        CurrentProject.Tests.Insert(targetIndex, test);
+
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool DeleteNode(int testId, int nodeId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        var removed = test.Nodes.RemoveAll(node => node.Id == nodeId) > 0;
+        if (!removed)
+        {
+            return false;
+        }
+
+        NormalizeNodeOrder(test);
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool MoveNode(int testId, int sourceNodeId, int targetNodeId)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        var sourceIndex = test.Nodes.FindIndex(node => node.Id == sourceNodeId);
+        var targetIndex = test.Nodes.FindIndex(node => node.Id == targetNodeId);
+
+        if (sourceIndex < 0 || targetIndex < 0 || sourceIndex == targetIndex)
+        {
+            return false;
+        }
+
+        var node = test.Nodes[sourceIndex];
+        test.Nodes.RemoveAt(sourceIndex);
+        test.Nodes.Insert(targetIndex, node);
+
+        NormalizeNodeOrder(test);
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
     }
 
     private async Task AutoSaveTickAsync()
@@ -197,11 +309,14 @@ public sealed class ProjectSessionService
     {
         if (string.IsNullOrWhiteSpace(project.Value) || project.Value.Trim() == "{}")
         {
-            return new ProjectSessionState
+            var emptySession = new ProjectSessionState
             {
                 ProjectId = project.Id,
                 Name = project.Name
             };
+
+            EnsureTestsInitialized(emptySession);
+            return emptySession;
         }
 
         try
@@ -212,6 +327,8 @@ public sealed class ProjectSessionService
                 session.ProjectId = project.Id;
                 session.Name = string.IsNullOrWhiteSpace(session.Name) ? project.Name : session.Name;
                 session.Nodes ??= [];
+                session.Tests ??= [];
+                EnsureTestsInitialized(session);
                 return session;
             }
         }
@@ -219,11 +336,14 @@ public sealed class ProjectSessionService
         {
         }
 
-        return new ProjectSessionState
+        var fallbackSession = new ProjectSessionState
         {
             ProjectId = project.Id,
             Name = project.Name
         };
+
+        EnsureTestsInitialized(fallbackSession);
+        return fallbackSession;
     }
 
     private void EnsureProjectLoaded()
@@ -237,5 +357,79 @@ public sealed class ProjectSessionService
     private void MarkDirty()
     {
         Interlocked.Exchange(ref _hasPendingChanges, 1);
+    }
+
+    private static void EnsureTestsInitialized(ProjectSessionState session)
+    {
+        session.Nodes ??= [];
+        session.Tests ??= [];
+
+        if (session.Tests.Count == 0)
+        {
+            session.Tests.Add(new ProjectTestState
+            {
+                Id = 1,
+                Name = "Test 1",
+                Nodes = session.Nodes
+                    .OrderBy(node => node.Y)
+                    .ThenBy(node => node.X)
+                    .ToList()
+            });
+        }
+
+        foreach (var test in session.Tests)
+        {
+            NormalizeNodeOrder(test);
+        }
+
+        SyncLegacyNodes(session);
+    }
+
+    private static void SyncLegacyNodes(ProjectSessionState session)
+    {
+        session.Nodes = session.Tests
+            .SelectMany(test => test.Nodes)
+            .ToList();
+    }
+
+    private static int GetNextNodeId(ProjectSessionState session)
+    {
+        var allNodes = session.Tests.SelectMany(test => test.Nodes);
+        return allNodes.Any() ? allNodes.Max(node => node.Id) + 1 : 1;
+    }
+
+    private static IReadOnlyList<NodeValueRecord> CreateDefaultValues(int order)
+    {
+        return
+        [
+            new NodeValueRecord("Status", "Draft"),
+            new NodeValueRecord("Order", order.ToString())
+        ];
+    }
+
+    private static void NormalizeNodeOrder(ProjectTestState test)
+    {
+        test.Nodes = test.Nodes
+            .Select((node, index) => node with
+            {
+                X = 0,
+                Y = index,
+                Values = UpdateNodeOrderValue(node.Values, index + 1)
+            })
+            .ToList();
+    }
+
+    private static IReadOnlyList<NodeValueRecord> UpdateNodeOrderValue(IReadOnlyList<NodeValueRecord> values, int order)
+    {
+        if (values.Count == 0)
+        {
+            return CreateDefaultValues(order);
+        }
+
+        var updated = values
+            .Where(value => !string.Equals(value.Label, "Order", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        updated.Add(new NodeValueRecord("Order", order.ToString()));
+        return updated;
     }
 }
