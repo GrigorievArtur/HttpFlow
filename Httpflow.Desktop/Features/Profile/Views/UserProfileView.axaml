@@ -18,7 +18,7 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
-            <Grid RowDefinitions="Auto,Auto,Auto"
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
                   ColumnDefinitions="140,*"
                   RowSpacing="12">
                 <TextBlock Text="Name"
@@ -39,6 +39,19 @@
                 <TextBlock x:Name="ProfileUserIdTextBlock"
                            Grid.Row="2"
                            Grid.Column="1"/>
+
+                <TextBlock Grid.Row="3"
+                           Text="Theme"
+                           FontWeight="SemiBold"/>
+                <ComboBox x:Name="ThemeModeComboBox"
+                          Grid.Row="3"
+                          Grid.Column="1"
+                          Width="160"
+                          HorizontalAlignment="Left"
+                          SelectionChanged="OnThemeModeSelectionChanged">
+                    <ComboBoxItem Content="Light"/>
+                    <ComboBoxItem Content="Dark"/>
+                </ComboBox>
             </Grid>
         </Border>
 

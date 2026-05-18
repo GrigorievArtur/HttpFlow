@@ -14,14 +14,14 @@
              x:Class="Httpflow.Desktop.Features.Projects.Views.ProjectWorkspaceView">
     <UserControl.Styles>
         <Style Selector="Border.test-column.selected">
-            <Setter Property="BorderBrush" Value="#111111"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
             <Setter Property="BorderThickness" Value="3"/>
-            <Setter Property="Background" Value="#FCFCFC"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
         </Style>
         <Style Selector="Border.node-card.selected">
-            <Setter Property="BorderBrush" Value="#111111"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
         </Style>
     </UserControl.Styles>
 
@@ -71,7 +71,7 @@
                                                 Padding="10"
                                                 Classes.test-column="True"
                                                 Classes.selected="{Binding IsSelected}"
-                                                Background="#FFFFFF"
+                                                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                                                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="0"
@@ -127,7 +127,7 @@
                                                                                 Padding="10"
                                                                                 Classes.node-card="True"
                                                                                 Classes.selected="{Binding IsSelected}"
-                                                                                Background="#F6F6F6"
+                                                                                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
                                                                                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                                                                                 BorderThickness="1"
                                                                                 CornerRadius="0"
@@ -158,10 +158,10 @@
                                                                                 <Border HorizontalAlignment="Left"
                                                                                         Margin="0,4,0,0"
                                                                                         Padding="6,2"
-                                                                                        Background="#111111"
+                                                                                        Background="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
                                                                                         CornerRadius="0">
                                                                                     <TextBlock Text="{Binding NodeType}"
-                                                                                               Foreground="White"
+                                                                                               Foreground="{DynamicResource SystemControlBackgroundAltHighBrush}"
                                                                                                FontSize="10"/>
                                                                                 </Border>
                                                                             </StackPanel>
