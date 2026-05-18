@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,10 +15,12 @@ namespace Httpflow.Desktop.Features.Projects.ViewModels;
 
 public partial class ProjectWorkspaceViewModel : ViewModelBase
 {
+    private readonly App _app;
     private readonly ProjectSessionService _projectSessionService;
 
-    public ProjectWorkspaceViewModel(ProjectSessionService projectSessionService)
+    public ProjectWorkspaceViewModel(App app, ProjectSessionService projectSessionService)
     {
+        _app = app;
         _projectSessionService = projectSessionService;
     }
 
@@ -59,9 +62,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     [RelayCommand]
     private void AddNode(int testId)
     {
-        var node = _projectSessionService.AddNode(testId);
-        LoadSession(_projectSessionService.CurrentProject);
-        SelectNode(testId, node.Id);
+        AddNodeToTest(testId);
     }
 
     [RelayCommand]
@@ -83,12 +84,19 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
             return;
         }
 
+        var nextSelection = GetNodeSelectionBefore(node.TestId, node.Id);
         if (!_projectSessionService.DeleteNode(node.TestId, node.Id))
         {
             return;
         }
 
         LoadSession(_projectSessionService.CurrentProject);
+        if (nextSelection is { } nextNode)
+        {
+            SelectNode(nextNode.TestId, nextNode.NodeId);
+            return;
+        }
+
         SelectTest(node.TestId);
     }
 
@@ -103,6 +111,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
             }
         }
 
+        _app.SelectedNode = null;
         OnPropertyChanged(nameof(SelectedTestId));
         OnPropertyChanged(nameof(SelectedNode));
     }
@@ -118,34 +127,71 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
             }
         }
 
+        _app.SelectedNode = SelectedNode?.Node;
         OnPropertyChanged(nameof(SelectedTestId));
         OnPropertyChanged(nameof(SelectedNode));
     }
 
-    public void DeleteSelectedTest()
+    public void DeleteSelectedNode()
     {
         if (SelectedNode is not null)
         {
             DeleteNode(SelectedNode);
-            return;
         }
+    }
 
-        if (SelectedTestId is not { } testId)
-        {
-            return;
-        }
+    public WorkspaceNodeCardViewModel? AddNodeToActiveSelection()
+    {
+        var testId = SelectedNode?.TestId ?? SelectedTestId;
+        return testId is null ? null : AddNodeToTest(testId.Value);
+    }
 
-        if (!_projectSessionService.DeleteTest(testId))
-        {
-            return;
-        }
-
+    public WorkspaceNodeCardViewModel? AddNodeToTest(int testId)
+    {
+        var node = _projectSessionService.AddNode(testId);
         LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(testId, node.Id);
+        return SelectedNode;
+    }
 
-        if (Tests.Count > 0)
+    public void SelectAdjacentNode(int direction)
+    {
+        var selectedNode = SelectedNode;
+        if (selectedNode is null)
         {
-            SelectTest(Tests[0].Id);
+            if (SelectedTestId is { } selectedTestId)
+            {
+                var selectedTest = Tests.FirstOrDefault(test => test.Id == selectedTestId);
+                var firstNode = direction >= 0 ? selectedTest?.Nodes.FirstOrDefault() : selectedTest?.Nodes.LastOrDefault();
+                if (firstNode is not null)
+                {
+                    SelectNode(firstNode.TestId, firstNode.Id);
+                }
+            }
+
+            return;
         }
+
+        var test = Tests.FirstOrDefault(item => item.Id == selectedNode.TestId);
+        if (test is null)
+        {
+            return;
+        }
+
+        var index = test.Nodes.ToList().FindIndex(node => node.Id == selectedNode.Id);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var nextIndex = index + Math.Sign(direction);
+        if (nextIndex < 0 || nextIndex >= test.Nodes.Count)
+        {
+            return;
+        }
+
+        var nextNode = test.Nodes[nextIndex];
+        SelectNode(nextNode.TestId, nextNode.Id);
     }
 
     public void MoveTest(int sourceTestId, int targetTestId)
@@ -214,6 +260,10 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         {
             SelectTest(Tests[0].Id);
         }
+        else
+        {
+            _app.SelectedNode = null;
+        }
     }
 
     private static IEnumerable<WorkspaceNodeCardViewModel> BuildNodeViewModels(int testId, IEnumerable<CanvasNodeRecord> nodes)
@@ -226,5 +276,27 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
                 orderedNodes[index],
                 showConnector: index < orderedNodes.Count - 1);
         }
+    }
+
+    private (int TestId, int NodeId)? GetNodeSelectionBefore(int testId, int nodeId)
+    {
+        var test = Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return null;
+        }
+
+        var index = test.Nodes.ToList().FindIndex(node => node.Id == nodeId);
+        if (index > 0)
+        {
+            return (testId, test.Nodes[index - 1].Id);
+        }
+
+        if (index == 0 && test.Nodes.Count > 1)
+        {
+            return (testId, test.Nodes[1].Id);
+        }
+
+        return null;
     }
 }

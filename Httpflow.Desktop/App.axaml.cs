@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using DotNetEnv;
 using Httpflow.Desktop.Dtos.Projects;
 using Httpflow.Desktop.Features.Auth.Views;
+using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Services.Auth;
 using Httpflow.Desktop.Services.Collaborators;
 using Httpflow.Desktop.Services.Projects;
@@ -35,6 +36,8 @@ public partial class App : Application
     public ProjectSessionService ProjectSessionService => _projectSession ??= new ProjectSessionService(this);
 
     public ProjectDto? CurrentProject { get; set; }
+
+    public CanvasNodeRecord? SelectedNode { get; set; }
 
     private HttpClient HttpClient => _httpClient ??= new HttpClient
     {

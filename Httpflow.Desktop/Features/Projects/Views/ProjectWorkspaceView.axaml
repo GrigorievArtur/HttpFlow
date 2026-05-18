@@ -9,6 +9,8 @@
              x:DataType="vm:ProjectWorkspaceViewModel"
              Focusable="True"
              KeyDown="OnWorkspaceKeyDown"
+             PointerMoved="OnWorkspacePointerMoved"
+             PointerReleased="OnWorkspacePointerReleased"
              x:Class="Httpflow.Desktop.Features.Projects.Views.ProjectWorkspaceView">
     <UserControl.Styles>
         <Style Selector="Border.test-column.selected">
@@ -74,7 +76,9 @@
                                                 BorderThickness="1"
                                                 CornerRadius="0"
                                                 VerticalAlignment="Stretch"
+                                                PointerPressed="OnTestColumnPointerPressed"
                                                 PointerEntered="OnTestColumnPointerEnter"
+                                                PointerReleased="OnTestColumnPointerReleased"
                                                 Tag="{Binding}">
                                             <Grid RowDefinitions="Auto,*"
                                                   RowSpacing="10">
@@ -127,7 +131,9 @@
                                                                                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                                                                                 BorderThickness="1"
                                                                                 CornerRadius="0"
+                                                                                PointerPressed="OnNodeCardPointerPressed"
                                                                                 PointerEntered="OnNodeCardPointerEnter"
+                                                                                PointerReleased="OnNodeCardPointerReleased"
                                                                                 Tag="{Binding}">
                                                                             <StackPanel Spacing="8">
                                                                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto"
@@ -163,8 +169,8 @@
                                                                                             Padding="0"
                                                                                             HorizontalContentAlignment="Center"
                                                                                             VerticalContentAlignment="Center"
-                                                                                            Command="{ReflectionBinding DataContext.DeleteNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                                            CommandParameter="{Binding}">
+                                                                                            Click="OnDeleteNodeButtonClick"
+                                                                                            Tag="{Binding}">
                                                                                         <PathIcon Width="10"
                                                                                                   Height="10"
                                                                                                   Data="M4,6 H16 M7,6 V4 H13 V6 M7,8 V16 M10,8 V16 M13,8 V16 M5,6 L6,18 H14 L15,6"/>
@@ -206,8 +212,8 @@
                                                                 Padding="0"
                                                                 HorizontalContentAlignment="Center"
                                                                 VerticalContentAlignment="Center"
-                                                                Command="{ReflectionBinding DataContext.AddNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                CommandParameter="{Binding Id}">
+                                                                Click="OnAddNodeButtonClick"
+                                                                Tag="{Binding}">
                                                             <PathIcon Width="16"
                                                                       Height="16"
                                                                       Data="M10,2 L10,10 L18,10 L18,14 L10,14 L10,22 L6,22 L6,14 L-2,14 L-2,10 L6,10 L6,2 Z"/>

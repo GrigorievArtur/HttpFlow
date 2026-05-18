@@ -195,7 +195,8 @@ public sealed class ProjectSessionService
 
         var test = CurrentProject.Tests[sourceIndex];
         CurrentProject.Tests.RemoveAt(sourceIndex);
-        CurrentProject.Tests.Insert(targetIndex, test);
+        var insertIndex = sourceIndex < targetIndex ? targetIndex : targetIndex + 1;
+        CurrentProject.Tests.Insert(Math.Min(insertIndex, CurrentProject.Tests.Count), test);
 
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
@@ -246,7 +247,8 @@ public sealed class ProjectSessionService
 
         var node = test.Nodes[sourceIndex];
         test.Nodes.RemoveAt(sourceIndex);
-        test.Nodes.Insert(targetIndex, node);
+        var insertIndex = sourceIndex < targetIndex ? targetIndex : targetIndex;
+        test.Nodes.Insert(Math.Min(insertIndex, test.Nodes.Count), node);
 
         NormalizeNodeOrder(test);
         SyncLegacyNodes(CurrentProject);

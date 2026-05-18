@@ -1,8 +1,11 @@
 using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Httpflow.Desktop.Features.Projects.ViewModels;
 using Httpflow.Desktop.Features.Projects.Views.Interactions;
 using Httpflow.Desktop.Services.Projects;
@@ -18,8 +21,9 @@ public partial class ProjectWorkspaceView : UserControl
     public ProjectWorkspaceView()
     {
         InitializeComponent();
-        _projectSessionService = ((App)Application.Current!).ProjectSessionService;
-        _viewModel = new ProjectWorkspaceViewModel(_projectSessionService);
+        var app = (App)Application.Current!;
+        _projectSessionService = app.ProjectSessionService;
+        _viewModel = new ProjectWorkspaceViewModel(app, _projectSessionService);
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         DataContext = _viewModel;
         Loaded += OnLoaded;
@@ -63,21 +67,36 @@ public partial class ProjectWorkspaceView : UserControl
             Focus();
         }
 
-        if (sender is IInputElement inputElement)
+        e.Handled = true;
+    }
+
+    private void OnTestColumnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (IsFromButton(e.Source))
         {
-            e.Pointer.Capture(inputElement);
+            return;
         }
 
-        e.Handled = true;
+        if (TryGetTest(sender, out var test))
+        {
+            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Test, test.Id, test.Id));
+            _viewModel.SelectTest(test.Id);
+            Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void OnTestColumnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_dragState.ActiveItem is { Kind: WorkspaceDragItemKind.Test })
+        {
+            _dragState.End();
+            e.Handled = true;
+        }
     }
 
     private void OnTestGripPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (sender is IInputElement inputElement)
-        {
-            e.Pointer.Capture(null);
-        }
-
         if (!_dragState.WasReordered && TryGetTest(sender, out var test))
         {
             _viewModel.SelectTest(test.Id);
@@ -107,6 +126,30 @@ public partial class ProjectWorkspaceView : UserControl
         e.Handled = true;
     }
 
+    private void OnWorkspacePointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_dragState.ActiveItem is not { } dragItem)
+        {
+            return;
+        }
+
+        var pointerPosition = e.GetPosition(this);
+        if (dragItem.Kind == WorkspaceDragItemKind.Test)
+        {
+            MoveTestUnderPointer(dragItem, pointerPosition);
+            e.Handled = true;
+            return;
+        }
+
+        MoveNodeUnderPointer(dragItem, pointerPosition);
+        e.Handled = true;
+    }
+
+    private void OnWorkspacePointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _dragState.End();
+    }
+
     private void OnNodeGripPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (TryGetNode(sender, out var node))
@@ -116,21 +159,36 @@ public partial class ProjectWorkspaceView : UserControl
             Focus();
         }
 
-        if (sender is IInputElement inputElement)
+        e.Handled = true;
+    }
+
+    private void OnNodeCardPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (IsFromButton(e.Source))
         {
-            e.Pointer.Capture(inputElement);
+            return;
         }
 
-        e.Handled = true;
+        if (TryGetNode(sender, out var node))
+        {
+            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
+            _viewModel.SelectNode(node.TestId, node.Id);
+            Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void OnNodeCardPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_dragState.ActiveItem is { Kind: WorkspaceDragItemKind.Node })
+        {
+            _dragState.End();
+            e.Handled = true;
+        }
     }
 
     private void OnNodeGripPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (sender is IInputElement inputElement)
-        {
-            e.Pointer.Capture(null);
-        }
-
         if (!_dragState.WasReordered && TryGetNode(sender, out var node))
         {
             _viewModel.SelectNode(node.TestId, node.Id);
@@ -162,12 +220,57 @@ public partial class ProjectWorkspaceView : UserControl
 
     private void OnWorkspaceKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Delete && e.Key != Key.Back)
+        switch (e.Key)
         {
-            return;
+            case Key.Space:
+                if (_viewModel.AddNodeToActiveSelection() is not null)
+                {
+                    ScrollSelectedNodeIntoView();
+                    e.Handled = true;
+                }
+                return;
+
+            case Key.Up:
+                _viewModel.SelectAdjacentNode(-1);
+                ScrollSelectedNodeIntoView();
+                e.Handled = true;
+                return;
+
+            case Key.Down:
+                _viewModel.SelectAdjacentNode(1);
+                ScrollSelectedNodeIntoView();
+                e.Handled = true;
+                return;
+
+            case Key.Delete:
+            case Key.Back:
+                _viewModel.DeleteSelectedNode();
+                ScrollSelectedNodeIntoView();
+                e.Handled = true;
+                return;
+        }
+    }
+
+    private void OnAddNodeButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetTest(sender, out var test) && _viewModel.AddNodeToTest(test.Id) is not null)
+        {
+            Focus();
+            ScrollSelectedNodeIntoView();
         }
 
-        _viewModel.DeleteSelectedTest();
+        e.Handled = true;
+    }
+
+    private void OnDeleteNodeButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetNode(sender, out var node))
+        {
+            _viewModel.DeleteNodeCommand.Execute(node);
+            Focus();
+            ScrollSelectedNodeIntoView();
+        }
+
         e.Handled = true;
     }
 
@@ -193,5 +296,79 @@ public partial class ProjectWorkspaceView : UserControl
 
         node = null!;
         return false;
+    }
+
+    private static bool IsFromButton(object? source)
+    {
+        if (source is not Visual visual)
+        {
+            return false;
+        }
+
+        return visual.GetSelfAndVisualAncestors().OfType<Button>().Any();
+    }
+
+    private void MoveTestUnderPointer(WorkspaceDragItem dragItem, Point pointerPosition)
+    {
+        var targetTest = FindTaggedControlAt<WorkspaceTestColumnViewModel>(pointerPosition)?.Tag as WorkspaceTestColumnViewModel;
+        if (targetTest is null || targetTest.Id == dragItem.ItemId)
+        {
+            return;
+        }
+
+        _viewModel.MoveTest(dragItem.ItemId, targetTest.Id);
+        _dragState.Begin(dragItem);
+        _dragState.MarkReordered();
+    }
+
+    private void MoveNodeUnderPointer(WorkspaceDragItem dragItem, Point pointerPosition)
+    {
+        var targetNode = FindTaggedControlAt<WorkspaceNodeCardViewModel>(pointerPosition)?.Tag as WorkspaceNodeCardViewModel;
+        if (targetNode is null || targetNode.TestId != dragItem.TestId || targetNode.Id == dragItem.ItemId)
+        {
+            return;
+        }
+
+        _viewModel.MoveNode(dragItem.TestId, dragItem.ItemId, targetNode.Id);
+        _dragState.Begin(dragItem);
+        _dragState.MarkReordered();
+        ScrollSelectedNodeIntoView();
+    }
+
+    private Control? FindTaggedControlAt<TTag>(Point rootPoint)
+    {
+        return this.GetVisualDescendants()
+            .OfType<Control>()
+            .Where(control => control.Tag is TTag && ContainsRootPoint(control, rootPoint))
+            .OrderBy(control => control.Bounds.Width * control.Bounds.Height)
+            .FirstOrDefault();
+    }
+
+    private bool ContainsRootPoint(Control control, Point rootPoint)
+    {
+        var origin = control.TranslatePoint(new Point(0, 0), this);
+        if (origin is null)
+        {
+            return false;
+        }
+
+        return new Rect(origin.Value, control.Bounds.Size).Contains(rootPoint);
+    }
+
+    private void ScrollSelectedNodeIntoView()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var selectedNode = _viewModel.SelectedNode;
+            if (selectedNode is null)
+            {
+                return;
+            }
+
+            var selectedNodeControl = this.GetVisualDescendants()
+                .OfType<Control>()
+                .FirstOrDefault(control => ReferenceEquals(control.Tag, selectedNode));
+            selectedNodeControl?.BringIntoView();
+        }, DispatcherPriority.Loaded);
     }
 }
