@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Httpflow.Desktop.Models.Nodes;
 
@@ -23,10 +25,32 @@ public sealed partial class WorkspaceNodeCardViewModel : ObservableObject
 
     public string NodeType => Node.NodeType;
 
+    public string RequestMethod => GetValue("Method", "GET");
+
+    public string Host
+    {
+        get
+        {
+            var url = GetValue("Url", string.Empty);
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && !string.IsNullOrWhiteSpace(uri.Host))
+            {
+                return uri.Host;
+            }
+
+            return string.IsNullOrWhiteSpace(url) ? "No host" : url;
+        }
+    }
+
     public IReadOnlyList<NodeValueRecord> Values => Node.Values;
 
     public bool ShowConnector { get; }
 
     [ObservableProperty]
     private bool isSelected;
+
+    private string GetValue(string label, string fallback)
+    {
+        return Values.FirstOrDefault(value => string.Equals(value.Label, label, StringComparison.OrdinalIgnoreCase))?.Value
+               ?? fallback;
+    }
 }

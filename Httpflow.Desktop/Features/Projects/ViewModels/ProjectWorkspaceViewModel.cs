@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Httpflow.Desktop.Features.NodesPanel.ViewModels;
 using Httpflow.Desktop.Models.Nodes;
 using Httpflow.Desktop.Models.Projects;
 using Httpflow.Desktop.Services.Projects;
@@ -22,6 +23,8 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     {
         _app = app;
         _projectSessionService = projectSessionService;
+        NodesPanel = new NodesPanelViewModel(projectSessionService);
+        NodesPanel.NodeUpdated += OnPanelNodeUpdated;
     }
 
     public GridLength SidebarWidth => new(IsSidebarOpen ? 392 : 0);
@@ -29,6 +32,8 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
     public string SidebarToggleText => IsSidebarOpen ? ">>" : "<<";
 
     public ObservableCollection<WorkspaceTestColumnViewModel> Tests { get; } = [];
+
+    public NodesPanelViewModel NodesPanel { get; }
 
     public int? SelectedTestId => Tests.FirstOrDefault(test => test.IsSelected)?.Id;
 
@@ -112,6 +117,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         _app.SelectedNode = null;
+        NodesPanel.SetSelectedNode(null);
         OnPropertyChanged(nameof(SelectedTestId));
         OnPropertyChanged(nameof(SelectedNode));
     }
@@ -128,6 +134,7 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         _app.SelectedNode = SelectedNode?.Node;
+        NodesPanel.SetSelectedNode(SelectedNode);
         OnPropertyChanged(nameof(SelectedTestId));
         OnPropertyChanged(nameof(SelectedNode));
     }
@@ -298,5 +305,11 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         }
 
         return null;
+    }
+
+    private void OnPanelNodeUpdated(int testId, int nodeId)
+    {
+        LoadSession(_projectSessionService.CurrentProject);
+        SelectNode(testId, nodeId);
     }
 }

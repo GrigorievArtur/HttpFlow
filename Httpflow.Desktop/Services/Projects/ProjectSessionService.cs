@@ -256,6 +256,61 @@ public sealed class ProjectSessionService
         return true;
     }
 
+    public bool UpdateNodeName(int testId, int nodeId, string name)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        var index = test.Nodes.FindIndex(node => node.Id == nodeId);
+        if (index < 0)
+        {
+            return false;
+        }
+
+        test.Nodes[index] = test.Nodes[index] with
+        {
+            Name = string.IsNullOrWhiteSpace(name) ? $"Node {index + 1}" : name
+        };
+
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
+    public bool UpdateNodeValue(int testId, int nodeId, string label, string value)
+    {
+        EnsureProjectLoaded();
+        EnsureTestsInitialized(CurrentProject!);
+
+        var test = CurrentProject!.Tests.FirstOrDefault(item => item.Id == testId);
+        if (test is null)
+        {
+            return false;
+        }
+
+        var index = test.Nodes.FindIndex(node => node.Id == nodeId);
+        if (index < 0)
+        {
+            return false;
+        }
+
+        var node = test.Nodes[index];
+        test.Nodes[index] = node with
+        {
+            Values = UpsertNodeValue(node.Values, label, value)
+        };
+
+        SyncLegacyNodes(CurrentProject);
+        MarkDirty();
+        return true;
+    }
+
     private async Task AutoSaveTickAsync()
     {
         if (CurrentProject is null || Interlocked.CompareExchange(ref _hasPendingChanges, 0, 0) == 0)
@@ -404,9 +459,30 @@ public sealed class ProjectSessionService
     {
         return
         [
+            new NodeValueRecord("Method", "GET"),
+            new NodeValueRecord("Url", "https://api.example.com"),
+            new NodeValueRecord("Body", string.Empty),
+            new NodeValueRecord("Response", string.Empty),
             new NodeValueRecord("Status", "Draft"),
             new NodeValueRecord("Order", order.ToString())
         ];
+    }
+
+    private static IReadOnlyList<NodeValueRecord> UpsertNodeValue(
+        IReadOnlyList<NodeValueRecord> values,
+        string label,
+        string value)
+    {
+        var updated = values.ToList();
+        var index = updated.FindIndex(item => string.Equals(item.Label, label, StringComparison.OrdinalIgnoreCase));
+        if (index >= 0)
+        {
+            updated[index] = new NodeValueRecord(updated[index].Label, value);
+            return updated;
+        }
+
+        updated.Add(new NodeValueRecord(label, value));
+        return updated;
     }
 
     private static void NormalizeNodeOrder(ProjectTestState test)

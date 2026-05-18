@@ -262,18 +262,6 @@ public partial class ProjectWorkspaceView : UserControl
         e.Handled = true;
     }
 
-    private void OnDeleteNodeButtonClick(object? sender, RoutedEventArgs e)
-    {
-        if (TryGetNode(sender, out var node))
-        {
-            _viewModel.DeleteNodeCommand.Execute(node);
-            Focus();
-            ScrollSelectedNodeIntoView();
-        }
-
-        e.Handled = true;
-    }
-
     private static bool TryGetTest(object? sender, out WorkspaceTestColumnViewModel test)
     {
         if (sender is Control control && control.Tag is WorkspaceTestColumnViewModel viewModel)

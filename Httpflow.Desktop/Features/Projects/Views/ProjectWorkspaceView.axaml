@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Httpflow.Desktop.Features.Projects.ViewModels"
-             xmlns:nodes="using:Httpflow.Desktop.Models.Nodes"
+             xmlns:nodesPanel="using:Httpflow.Desktop.Features.NodesPanel.Views"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
              x:DataType="vm:ProjectWorkspaceViewModel"
              Focusable="True"
@@ -136,62 +136,34 @@
                                                                                 PointerReleased="OnNodeCardPointerReleased"
                                                                                 Tag="{Binding}">
                                                                             <StackPanel Spacing="8">
-                                                                                <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                                                                                <Grid ColumnDefinitions="*,Auto"
                                                                                       ColumnSpacing="8">
-                                                                                    <Button Width="22"
-                                                                                            Height="22"
-                                                                                            Padding="0"
-                                                                                            HorizontalContentAlignment="Center"
-                                                                                            VerticalContentAlignment="Center"
-                                                                                            PointerPressed="OnNodeGripPointerPressed"
-                                                                                            PointerReleased="OnNodeGripPointerReleased"
-                                                                                            Tag="{Binding}">
-                                                                                        <PathIcon Width="10"
-                                                                                                  Height="10"
-                                                                                                  Data="M2,4 H6 V8 H2 Z M10,4 H14 V8 H10 Z M2,12 H6 V16 H2 Z M10,12 H14 V16 H10 Z"/>
-                                                                                    </Button>
-                                                                                    <TextBlock Grid.Column="1"
-                                                                                               Text="{Binding Name}"
+                                                                                    <TextBlock Text="{Binding Name}"
                                                                                                VerticalAlignment="Center"
                                                                                                FontSize="15"
                                                                                                FontWeight="SemiBold"/>
-                                                                                    <Border Grid.Column="2"
-                                                                                            Padding="6,2"
-                                                                                            Background="#111111"
-                                                                                            CornerRadius="0">
-                                                                                        <TextBlock Text="{Binding NodeType}"
-                                                                                                   Foreground="White"
-                                                                                                   FontSize="10"/>
-                                                                                    </Border>
-                                                                                    <Button Grid.Column="3"
-                                                                                            Width="22"
-                                                                                            Height="22"
-                                                                                            Padding="0"
-                                                                                            HorizontalContentAlignment="Center"
-                                                                                            VerticalContentAlignment="Center"
-                                                                                            Click="OnDeleteNodeButtonClick"
-                                                                                            Tag="{Binding}">
-                                                                                        <PathIcon Width="10"
-                                                                                                  Height="10"
-                                                                                                  Data="M4,6 H16 M7,6 V4 H13 V6 M7,8 V16 M10,8 V16 M13,8 V16 M5,6 L6,18 H14 L15,6"/>
-                                                                                    </Button>
                                                                                 </Grid>
 
-                                                                                <ItemsControl ItemsSource="{Binding Values}">
-                                                                                    <ItemsControl.ItemTemplate>
-                                                                                        <DataTemplate x:DataType="nodes:NodeValueRecord">
-                                                                                            <Grid ColumnDefinitions="Auto,*"
-                                                                                                  ColumnSpacing="8">
-                                                                                                <TextBlock Text="{Binding Label}"
-                                                                                                           FontSize="11"
-                                                                                                           FontWeight="SemiBold"/>
-                                                                                                <TextBlock Grid.Column="1"
-                                                                                                           Text="{Binding Value}"
-                                                                                                           FontSize="11"/>
-                                                                                            </Grid>
-                                                                                        </DataTemplate>
-                                                                                    </ItemsControl.ItemTemplate>
-                                                                                </ItemsControl>
+                                                                                <Grid ColumnDefinitions="Auto,*"
+                                                                                      ColumnSpacing="8">
+                                                                                    <TextBlock Text="{Binding RequestMethod}"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold"/>
+                                                                                    <TextBlock Grid.Column="1"
+                                                                                               Text="{Binding Host}"
+                                                                                               FontSize="12"
+                                                                                               TextAlignment="Right"/>
+                                                                                </Grid>
+
+                                                                                <Border HorizontalAlignment="Left"
+                                                                                        Margin="0,4,0,0"
+                                                                                        Padding="6,2"
+                                                                                        Background="#111111"
+                                                                                        CornerRadius="0">
+                                                                                    <TextBlock Text="{Binding NodeType}"
+                                                                                               Foreground="White"
+                                                                                               FontSize="10"/>
+                                                                                </Border>
                                                                             </StackPanel>
                                                                         </Border>
 
@@ -261,72 +233,7 @@
                 Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="1,0,0,0">
-            <Grid RowDefinitions="Auto,Auto,*,*">
-                <TextBlock Text="Http Request Name"
-                           FontSize="22"
-                           FontWeight="SemiBold"/>
-
-                <Grid Grid.Row="1"
-                      Margin="0,22,0,16"
-                      ColumnDefinitions="100,*,42"
-                      RowDefinitions="Auto,Auto"
-                      ColumnSpacing="10">
-                    <TextBlock Text="Method"
-                               FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="1"
-                               Text="Api link"
-                               FontWeight="SemiBold"/>
-
-                    <ComboBox Grid.Row="1"
-                              HorizontalAlignment="Stretch"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="GET"/>
-                        <ComboBoxItem Content="POST"/>
-                        <ComboBoxItem Content="PUT"/>
-                        <ComboBoxItem Content="PATCH"/>
-                        <ComboBoxItem Content="DELETE"/>
-                    </ComboBox>
-
-                    <TextBox Grid.Row="1"
-                             Grid.Column="1"
-                             HorizontalAlignment="Stretch"
-                             PlaceholderText="https://api.example.com"/>
-
-                    <Button Grid.Row="1"
-                            Grid.Column="2"
-                            Width="42"
-                            MinWidth="42"
-                            Height="36"
-                            Padding="0"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center">
-                        <PathIcon Width="20"
-                                  Height="20"
-                                  Data="M4,3 L18,10 L4,17 L7,10 Z"/>
-                    </Button>
-                </Grid>
-
-                <Grid Grid.Row="2"
-                      RowDefinitions="Auto,*"
-                      Margin="0,0,0,16">
-                    <TextBlock Text="Json data"
-                               FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="1"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             PlaceholderText="JSON body"/>
-                </Grid>
-
-                <Grid Grid.Row="3"
-                      RowDefinitions="Auto,*">
-                    <TextBlock Text="Response"
-                               FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="1"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             IsReadOnly="True"/>
-                </Grid>
-            </Grid>
+            <nodesPanel:NodesPanelView DataContext="{Binding NodesPanel}"/>
         </Border>
     </Grid>
 </UserControl>
