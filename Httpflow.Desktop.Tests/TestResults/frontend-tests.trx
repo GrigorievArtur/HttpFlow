@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="2aedd777-0acf-4fef-b844-9e8f668b154e" name="@Arturs-MacBook-Air 2026-05-19 09:50:44" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-05-19T09:50:44.6315740+03:00" queuing="2026-05-19T09:50:44.6315740+03:00" start="2026-05-19T09:50:44.3485800+03:00" finish="2026-05-19T09:50:44.6410080+03:00" />
+  <TestSettings name="default" id="d223c687-67fb-4e79-bba5-6396ca8fe734">
+    <Deployment runDeploymentRoot="_Arturs-MacBook-Air_2026-05-19_09_50_44" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="34b5daae-6504-42f5-91c2-5de9d0d67bbb" testId="fc399c4c-cae7-d889-93c7-c56e0e00fa62" testName="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests.Host_ReturnsHost_WhenRequestUrlIsAbsolute" computerName="Arturs-MacBook-Air" duration="00:00:00.0001524" startTime="2026-05-19T09:50:44.6057690+03:00" endTime="2026-05-19T09:50:44.6058430+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="34b5daae-6504-42f5-91c2-5de9d0d67bbb" />
+    <UnitTestResult executionId="b19b9a15-a8ca-460c-8161-bdf7b4fd2bdd" testId="a143eee7-744e-f1b6-9ec1-079b07612b3c" testName="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot; Request Node &quot;, expected: &quot;requestnode&quot;)" computerName="Arturs-MacBook-Air" duration="00:00:00.0000564" startTime="2026-05-19T09:50:44.6154690+03:00" endTime="2026-05-19T09:50:44.6154980+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b19b9a15-a8ca-460c-8161-bdf7b4fd2bdd" />
+    <UnitTestResult executionId="2cf21f6e-5045-4e45-adc5-1a2c547ca89a" testId="036df5db-f781-960e-6f16-2de5c2648a0d" testName="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests.BuildOrderCycles_TreatsInvalidOrderAsFirstCycle" computerName="Arturs-MacBook-Air" duration="00:00:00.0069490" startTime="2026-05-19T09:50:44.5964520+03:00" endTime="2026-05-19T09:50:44.6156690+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2cf21f6e-5045-4e45-adc5-1a2c547ca89a" />
+    <UnitTestResult executionId="5acc8654-c849-4411-8dc2-7779f9ca2f69" testId="2a104f8c-9eef-a8f5-72c2-4bff2747861a" testName="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_IncrementsCopyNumber_WhenCopyAlreadyExists" computerName="Arturs-MacBook-Air" duration="00:00:00.0041060" startTime="2026-05-19T09:50:44.5964780+03:00" endTime="2026-05-19T09:50:44.6049360+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5acc8654-c849-4411-8dc2-7779f9ca2f69" />
+    <UnitTestResult executionId="0401a058-4db3-4cb1-95e6-90d03368cc19" testId="f638ac51-a67c-d270-e866-ba4c37698fcf" testName="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests.BuildOrderCycles_GroupsTestsWithSameOrderAndSortsSequentially" computerName="Arturs-MacBook-Air" duration="00:00:00.0002759" startTime="2026-05-19T09:50:44.6157190+03:00" endTime="2026-05-19T09:50:44.6157410+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0401a058-4db3-4cb1-95e6-90d03368cc19" />
+    <UnitTestResult executionId="11d71209-4c7a-49c2-8436-760c12d4ec52" testId="94035a53-2993-2ce2-1fda-6c05ebe22b18" testName="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot;Req\tuest\nNode&quot;, expected: &quot;requestnode&quot;)" computerName="Arturs-MacBook-Air" duration="00:00:00.0000011" startTime="2026-05-19T09:50:44.6156030+03:00" endTime="2026-05-19T09:50:44.6156230+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="11d71209-4c7a-49c2-8436-760c12d4ec52" />
+    <UnitTestResult executionId="9d227ac6-a788-444e-a9f3-4966e33d7d49" testId="3deb7298-5705-0831-5a2a-3628bbe0826e" testName="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.Filter_ReturnsAllNodes_WhenQueryIsEmptyWhitespace" computerName="Arturs-MacBook-Air" duration="00:00:00.0012166" startTime="2026-05-19T09:50:44.6057780+03:00" endTime="2026-05-19T09:50:44.6063300+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9d227ac6-a788-444e-a9f3-4966e33d7d49" />
+    <UnitTestResult executionId="d9351559-fe2b-4807-b8e2-d8ed5b4e4a00" testId="dcc03994-7a90-a16c-d0f3-f84015b60ff6" testName="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_AddsCopy_WhenNoCopyExists" computerName="Arturs-MacBook-Air" duration="00:00:00.0003635" startTime="2026-05-19T09:50:44.6058260+03:00" endTime="2026-05-19T09:50:44.6058740+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d9351559-fe2b-4807-b8e2-d8ed5b4e4a00" />
+    <UnitTestResult executionId="a35bec40-1113-441c-8abc-e58df0555453" testId="af2a7a4f-b79d-917a-1ac6-0cfa62cf3046" testName="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.Filter_MatchesNodeName_WhenQueryHasSpacesAndDifferentCasing" computerName="Arturs-MacBook-Air" duration="00:00:00.0036110" startTime="2026-05-19T09:50:44.5958960+03:00" endTime="2026-05-19T09:50:44.6032630+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a35bec40-1113-441c-8abc-e58df0555453" />
+    <UnitTestResult executionId="eac386e4-f70a-4584-8b7e-bcd615e47f00" testId="3f50e9b6-108e-e49a-c178-365b83925c23" testName="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot;EXPECTED   response&quot;, expected: &quot;expectedresponse&quot;)" computerName="Arturs-MacBook-Air" duration="00:00:00.0000220" startTime="2026-05-19T09:50:44.6063800+03:00" endTime="2026-05-19T09:50:44.6063990+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eac386e4-f70a-4584-8b7e-bcd615e47f00" />
+    <UnitTestResult executionId="c74f995c-cac2-4727-8ec2-1b174ea938e6" testId="0c84b708-fa46-70cc-4056-edf88d344a4e" testName="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_StripsExistingCopySuffix_BeforeIncrementing" computerName="Arturs-MacBook-Air" duration="00:00:00.0003143" startTime="2026-05-19T09:50:44.6059200+03:00" endTime="2026-05-19T09:50:44.6061190+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c74f995c-cac2-4727-8ec2-1b174ea938e6" />
+    <UnitTestResult executionId="c4397e74-a584-4d77-b3e2-d8884e6c33c8" testId="1a8d369a-13d9-253a-664f-4de2e002cf6e" testName="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests.ExpectedNode_DisplaysExpectedCodeAndContinueState" computerName="Arturs-MacBook-Air" duration="00:00:00.0033661" startTime="2026-05-19T09:50:44.5964670+03:00" endTime="2026-05-19T09:50:44.6019200+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c4397e74-a584-4d77-b3e2-d8884e6c33c8" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests.BuildOrderCycles_TreatsInvalidOrderAsFirstCycle" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="036df5db-f781-960e-6f16-2de5c2648a0d">
+      <Execution id="2cf21f6e-5045-4e45-adc5-1a2c547ca89a" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests" name="BuildOrderCycles_TreatsInvalidOrderAsFirstCycle" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.Filter_MatchesNodeName_WhenQueryHasSpacesAndDifferentCasing" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="af2a7a4f-b79d-917a-1ac6-0cfa62cf3046">
+      <Execution id="a35bec40-1113-441c-8abc-e58df0555453" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests" name="Filter_MatchesNodeName_WhenQueryHasSpacesAndDifferentCasing" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot; Request Node &quot;, expected: &quot;requestnode&quot;)" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="a143eee7-744e-f1b6-9ec1-079b07612b3c">
+      <Execution id="b19b9a15-a8ca-460c-8161-bdf7b4fd2bdd" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests" name="NormalizeSearchText_RemovesWhitespaceAndLowercases" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests.ExpectedNode_DisplaysExpectedCodeAndContinueState" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="1a8d369a-13d9-253a-664f-4de2e002cf6e">
+      <Execution id="c4397e74-a584-4d77-b3e2-d8884e6c33c8" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests" name="ExpectedNode_DisplaysExpectedCodeAndContinueState" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_IncrementsCopyNumber_WhenCopyAlreadyExists" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="2a104f8c-9eef-a8f5-72c2-4bff2747861a">
+      <Execution id="5acc8654-c849-4411-8dc2-7779f9ca2f69" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests" name="GetNextCopyName_IncrementsCopyNumber_WhenCopyAlreadyExists" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot;Req\tuest\nNode&quot;, expected: &quot;requestnode&quot;)" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="94035a53-2993-2ce2-1fda-6c05ebe22b18">
+      <Execution id="11d71209-4c7a-49c2-8436-760c12d4ec52" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests" name="NormalizeSearchText_RemovesWhitespaceAndLowercases" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests.Host_ReturnsHost_WhenRequestUrlIsAbsolute" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="fc399c4c-cae7-d889-93c7-c56e0e00fa62">
+      <Execution id="34b5daae-6504-42f5-91c2-5de9d0d67bbb" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.ViewModels.WorkspaceNodeCardViewModelTests" name="Host_ReturnsHost_WhenRequestUrlIsAbsolute" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_StripsExistingCopySuffix_BeforeIncrementing" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="0c84b708-fa46-70cc-4056-edf88d344a4e">
+      <Execution id="c74f995c-cac2-4727-8ec2-1b174ea938e6" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests" name="GetNextCopyName_StripsExistingCopySuffix_BeforeIncrementing" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests.BuildOrderCycles_GroupsTestsWithSameOrderAndSortsSequentially" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="f638ac51-a67c-d270-e866-ba4c37698fcf">
+      <Execution id="0401a058-4db3-4cb1-95e6-90d03368cc19" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Services.Projects.ProjectRunOrderPlannerTests" name="BuildOrderCycles_GroupsTestsWithSameOrderAndSortsSequentially" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.NormalizeSearchText_RemovesWhitespaceAndLowercases(value: &quot;EXPECTED   response&quot;, expected: &quot;expectedresponse&quot;)" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="3f50e9b6-108e-e49a-c178-365b83925c23">
+      <Execution id="eac386e4-f70a-4584-8b7e-bcd615e47f00" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests" name="NormalizeSearchText_RemovesWhitespaceAndLowercases" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests.GetNextCopyName_AddsCopy_WhenNoCopyExists" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="dcc03994-7a90-a16c-d0f3-f84015b60ff6">
+      <Execution id="d9351559-fe2b-4807-b8e2-d8ed5b4e4a00" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Services.Projects.NodeCopyNameGeneratorTests" name="GetNextCopyName_AddsCopy_WhenNoCopyExists" />
+    </UnitTest>
+    <UnitTest name="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests.Filter_ReturnsAllNodes_WhenQueryIsEmptyWhitespace" storage="/users/ar7ur/documents/projects/httpflow_app/frontend/httpflow.desktop.tests/bin/debug/net10.0/httpflow.desktop.tests.dll" id="3deb7298-5705-0831-5a2a-3628bbe0826e">
+      <Execution id="9d227ac6-a788-444e-a9f3-4966e33d7d49" />
+      <TestMethod codeBase="/Users/ar7ur/Documents/Projects/HTTPFLOW_APP/FRONTEND/Httpflow.Desktop.Tests/bin/Debug/net10.0/Httpflow.Desktop.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="Httpflow.Desktop.Tests.Features.Projects.Services.NodePickerSearchTests" name="Filter_ReturnsAllNodes_WhenQueryIsEmptyWhitespace" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="fc399c4c-cae7-d889-93c7-c56e0e00fa62" executionId="34b5daae-6504-42f5-91c2-5de9d0d67bbb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a143eee7-744e-f1b6-9ec1-079b07612b3c" executionId="b19b9a15-a8ca-460c-8161-bdf7b4fd2bdd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="036df5db-f781-960e-6f16-2de5c2648a0d" executionId="2cf21f6e-5045-4e45-adc5-1a2c547ca89a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2a104f8c-9eef-a8f5-72c2-4bff2747861a" executionId="5acc8654-c849-4411-8dc2-7779f9ca2f69" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f638ac51-a67c-d270-e866-ba4c37698fcf" executionId="0401a058-4db3-4cb1-95e6-90d03368cc19" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94035a53-2993-2ce2-1fda-6c05ebe22b18" executionId="11d71209-4c7a-49c2-8436-760c12d4ec52" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3deb7298-5705-0831-5a2a-3628bbe0826e" executionId="9d227ac6-a788-444e-a9f3-4966e33d7d49" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dcc03994-7a90-a16c-d0f3-f84015b60ff6" executionId="d9351559-fe2b-4807-b8e2-d8ed5b4e4a00" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="af2a7a4f-b79d-917a-1ac6-0cfa62cf3046" executionId="a35bec40-1113-441c-8abc-e58df0555453" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3f50e9b6-108e-e49a-c178-365b83925c23" executionId="eac386e4-f70a-4584-8b7e-bcd615e47f00" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0c84b708-fa46-70cc-4056-edf88d344a4e" executionId="c74f995c-cac2-4727-8ec2-1b174ea938e6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1a8d369a-13d9-253a-664f-4de2e002cf6e" executionId="c4397e74-a584-4d77-b3e2-d8884e6c33c8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="12" executed="12" passed="12" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.1+bf6400fd51 (64-bit .NET 10.0.7)
+[xUnit.net 00:00:00.03]   Discovering: Httpflow.Desktop.Tests
+[xUnit.net 00:00:00.04]   Discovered:  Httpflow.Desktop.Tests
+[xUnit.net 00:00:00.05]   Starting:    Httpflow.Desktop.Tests
+[xUnit.net 00:00:00.08]   Finished:    Httpflow.Desktop.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
