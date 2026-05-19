@@ -51,9 +51,9 @@ public sealed class ProjectTestRunnerService
             await UpdateTestStatusAsync(test.Id, "Waiting", cancellationToken);
         }
 
-        foreach (var orderGroup in tests.GroupBy(test => Math.Max(1, test.Order)).OrderBy(group => group.Key))
+        foreach (var orderGroup in ProjectRunOrderPlanner.BuildOrderCycles(tests))
         {
-            PublishProgress(true, $"Running order {orderGroup.Key}");
+            PublishProgress(true, $"Running order {Math.Max(1, orderGroup[0].Order)}");
             await Task.WhenAll(orderGroup.Select(test => RunTestAsync(test.Id, cancellationToken)));
         }
 

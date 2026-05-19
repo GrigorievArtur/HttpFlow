@@ -1,10 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Httpflow.Desktop.Features.Projects.Services;
 using Httpflow.Desktop.Models.Nodes;
 
 namespace Httpflow.Desktop.Features.Projects.Views;
@@ -62,16 +62,8 @@ public partial class NodePickerWindow : Window
 
     private void RefreshResults(string query)
     {
-        var ranked = NodeCatalog.AvailableNodes
-            .Select(node => new
-            {
-                Node = node,
-                Score = GetFuzzyScore(node.Name, query)
-            })
-            .Where(item => item.Score >= 0)
-            .OrderByDescending(item => item.Score)
-            .ThenBy(item => item.Node.Name)
-            .Select(item => new NodePickerItem(item.Node.Name, item.Node.NodeType, item.Node.Description))
+        var ranked = NodePickerSearch.Filter(NodeCatalog.AvailableNodes, query)
+            .Select(node => new NodePickerItem(node.Name, node.NodeType, node.Description))
             .ToList();
 
         _results.Clear();
@@ -79,45 +71,5 @@ public partial class NodePickerWindow : Window
         {
             _results.Add(item);
         }
-    }
-
-    private static int GetFuzzyScore(string value, string query)
-    {
-        var normalizedValue = NormalizeSearchText(value);
-        var normalizedQuery = NormalizeSearchText(query);
-
-        if (normalizedQuery.Length == 0)
-        {
-            return 1;
-        }
-
-        var score = 0;
-        var queryIndex = 0;
-        for (var valueIndex = 0; valueIndex < normalizedValue.Length && queryIndex < normalizedQuery.Length; valueIndex++)
-        {
-            if (normalizedValue[valueIndex] != normalizedQuery[queryIndex])
-            {
-                continue;
-            }
-
-            score += valueIndex == queryIndex ? 3 : 1;
-            queryIndex++;
-        }
-
-        return queryIndex == normalizedQuery.Length ? score : -1;
-    }
-
-    private static string NormalizeSearchText(string value)
-    {
-        var builder = new StringBuilder(value.Length);
-        foreach (var character in value)
-        {
-            if (!char.IsWhiteSpace(character))
-            {
-                builder.Append(char.ToLowerInvariant(character));
-            }
-        }
-
-        return builder.ToString();
     }
 }
