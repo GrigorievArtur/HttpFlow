@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Httpflow.Desktop.Dtos.Collaborators;
@@ -8,4 +9,8 @@ public record ProjectCollaboratorDto(
     [param: Required, StringLength(255)] string Lastname,
     [param: Required, EmailAddress, StringLength(320)] string Email,
     [param: Required, StringLength(32)] string Role,
-    bool IsOwner);
+    bool IsOwner,
+    [param: Required, StringLength(32)] string Status,
+    DateTime? JoinedAt,
+    DateTime InvitedAt,
+    bool IsOnline);

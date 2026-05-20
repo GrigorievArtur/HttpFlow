@@ -72,9 +72,14 @@ public partial class ProjectWorkspaceView : UserControl
 
     private void OnTestGripPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         if (TryGetTest(sender, out var test))
         {
-            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Test, test.Id, test.Id));
+            BeginDrag(e, new WorkspaceDragItem(WorkspaceDragItemKind.Test, test.Id, test.Id));
             _viewModel.SelectTest(test.Id);
             Focus();
         }
@@ -84,14 +89,14 @@ public partial class ProjectWorkspaceView : UserControl
 
     private void OnTestColumnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (IsFromButton(e.Source))
+        if (IsFromButton(e.Source) || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
             return;
         }
 
         if (TryGetTest(sender, out var test))
         {
-            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Test, test.Id, test.Id));
+            BeginDrag(e, new WorkspaceDragItem(WorkspaceDragItemKind.Test, test.Id, test.Id));
             _viewModel.SelectTest(test.Id);
             Focus();
             e.Handled = true;
@@ -102,7 +107,7 @@ public partial class ProjectWorkspaceView : UserControl
     {
         if (_dragState.ActiveItem is { Kind: WorkspaceDragItemKind.Test })
         {
-            _dragState.End();
+            EndDrag(e);
             e.Handled = true;
         }
     }
@@ -115,7 +120,7 @@ public partial class ProjectWorkspaceView : UserControl
             Focus();
         }
 
-        _dragState.End();
+        EndDrag(e);
         e.Handled = true;
     }
 
@@ -132,8 +137,12 @@ public partial class ProjectWorkspaceView : UserControl
             return;
         }
 
+        if (!_dragState.TryActivate(e.GetPosition(this), WorkspaceDragAxis.Horizontal))
+        {
+            return;
+        }
+
         _viewModel.MoveTest(dragItem.ItemId, targetTest.Id);
-        _dragState.Begin(dragItem);
         _dragState.MarkReordered();
         e.Handled = true;
     }
@@ -159,14 +168,23 @@ public partial class ProjectWorkspaceView : UserControl
 
     private void OnWorkspacePointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        _dragState.End();
+        if (_dragState.ActiveItem is not null)
+        {
+            EndDrag(e);
+            e.Handled = true;
+        }
     }
 
     private void OnNodeGripPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
         if (TryGetNode(sender, out var node))
         {
-            _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
+            BeginDrag(e, new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
             _viewModel.SelectNode(node.TestId, node.Id);
             Focus();
         }
@@ -187,7 +205,7 @@ public partial class ProjectWorkspaceView : UserControl
             Focus();
             if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             {
-                _dragState.Begin(new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
+                BeginDrag(e, new WorkspaceDragItem(WorkspaceDragItemKind.Node, node.TestId, node.Id));
                 e.Handled = true;
             }
         }
@@ -197,7 +215,7 @@ public partial class ProjectWorkspaceView : UserControl
     {
         if (_dragState.ActiveItem is { Kind: WorkspaceDragItemKind.Node })
         {
-            _dragState.End();
+            EndDrag(e);
             e.Handled = true;
         }
     }
@@ -210,7 +228,7 @@ public partial class ProjectWorkspaceView : UserControl
             Focus();
         }
 
-        _dragState.End();
+        EndDrag(e);
         e.Handled = true;
     }
 
@@ -227,8 +245,12 @@ public partial class ProjectWorkspaceView : UserControl
             return;
         }
 
+        if (!_dragState.TryActivate(e.GetPosition(this), WorkspaceDragAxis.Vertical))
+        {
+            return;
+        }
+
         _viewModel.MoveNode(dragItem.TestId, dragItem.ItemId, targetNode.Id);
-        _dragState.Begin(dragItem);
         _dragState.MarkReordered();
         e.Handled = true;
     }
@@ -441,8 +463,25 @@ public partial class ProjectWorkspaceView : UserControl
         return visual.GetSelfAndVisualAncestors().OfType<Button>().Any();
     }
 
+    private void BeginDrag(PointerPressedEventArgs e, WorkspaceDragItem item)
+    {
+        _dragState.Begin(item, e.GetPosition(this));
+        e.Pointer.Capture(this);
+    }
+
+    private void EndDrag(PointerReleasedEventArgs e)
+    {
+        _dragState.End();
+        e.Pointer.Capture(null);
+    }
+
     private void MoveTestUnderPointer(WorkspaceDragItem dragItem, Point pointerPosition)
     {
+        if (!_dragState.TryActivate(pointerPosition, WorkspaceDragAxis.Horizontal))
+        {
+            return;
+        }
+
         var targetTest = FindTaggedControlAt<WorkspaceTestColumnViewModel>(pointerPosition)?.Tag as WorkspaceTestColumnViewModel;
         if (targetTest is null || targetTest.Id == dragItem.ItemId)
         {
@@ -450,12 +489,16 @@ public partial class ProjectWorkspaceView : UserControl
         }
 
         _viewModel.MoveTest(dragItem.ItemId, targetTest.Id);
-        _dragState.Begin(dragItem);
         _dragState.MarkReordered();
     }
 
     private void MoveNodeUnderPointer(WorkspaceDragItem dragItem, Point pointerPosition)
     {
+        if (!_dragState.TryActivate(pointerPosition, WorkspaceDragAxis.Vertical))
+        {
+            return;
+        }
+
         var targetNode = FindTaggedControlAt<WorkspaceNodeCardViewModel>(pointerPosition)?.Tag as WorkspaceNodeCardViewModel;
         if (targetNode is null || targetNode.TestId != dragItem.TestId || targetNode.Id == dragItem.ItemId)
         {
@@ -463,7 +506,6 @@ public partial class ProjectWorkspaceView : UserControl
         }
 
         _viewModel.MoveNode(dragItem.TestId, dragItem.ItemId, targetNode.Id);
-        _dragState.Begin(dragItem);
         _dragState.MarkReordered();
         ScrollSelectedNodeIntoView();
     }

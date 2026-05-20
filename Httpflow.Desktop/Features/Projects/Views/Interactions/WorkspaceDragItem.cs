@@ -6,4 +6,10 @@ public enum WorkspaceDragItemKind
     Node
 }
 
+public enum WorkspaceDragAxis
+{
+    Horizontal,
+    Vertical
+}
+
 public readonly record struct WorkspaceDragItem(WorkspaceDragItemKind Kind, int TestId, int ItemId);

@@ -30,6 +30,7 @@ public partial class ProjectListView : UserControl
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         DataContext = _viewModel;
         Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
     }
 
     private async void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -38,6 +39,11 @@ public partial class ProjectListView : UserControl
         await _viewModel.LoadProjectListAsync();
         RenderProjectList();
         FocusCreateProjectNameIfNeeded();
+    }
+
+    private void OnUnloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _viewModel.Dispose();
     }
 
     protected override async void OnKeyDown(KeyEventArgs e)
@@ -69,6 +75,7 @@ public partial class ProjectListView : UserControl
             or nameof(ProjectListViewModel.CurrentPage)
             or nameof(ProjectListViewModel.HasNextPage)
             or nameof(ProjectListViewModel.ProjectsStatusText)
+            or nameof(ProjectListViewModel.SelectedProjectId)
             or nameof(ProjectListViewModel.IsCreateProjectDialogOpen))
         {
             if (e.PropertyName == nameof(ProjectListViewModel.SearchText))
@@ -98,9 +105,17 @@ public partial class ProjectListView : UserControl
             Content = project.Name,
             HorizontalContentAlignment = HorizontalAlignment.Left,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Command = _viewModel.SelectProjectCommand,
-            CommandParameter = project
+            Command = _viewModel.LoadQuickActionsCommand,
+            CommandParameter = project,
+            Tag = project
         };
+        openButton.Classes.Add("project-row");
+        if (_viewModel.SelectedProjectId == project.Id)
+        {
+            openButton.Classes.Add("selected");
+        }
+
+        openButton.DoubleTapped += OnProjectButtonDoubleTapped;
 
         var deleteButton = new Button
         {
@@ -125,6 +140,15 @@ public partial class ProjectListView : UserControl
                 }
             }
         };
+    }
+
+    private void OnProjectButtonDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Button { Tag: ProjectDto project })
+        {
+            _viewModel.SelectProjectCommand.Execute(project);
+            e.Handled = true;
+        }
     }
 
     private void FocusCreateProjectNameIfNeeded()

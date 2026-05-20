@@ -9,8 +9,8 @@ namespace Httpflow.Desktop.Services.Projects;
 
 public sealed class ProjectsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {
-    public Task<ApiResult<List<ProjectDto>>> GetProjectsAsync(string accessToken, int pageNumber = 1, int pageSize = 5) =>
-        GetAsync<List<ProjectDto>>($"api/v1/projects?pageNumber={pageNumber}&pageSize={pageSize}", accessToken);
+    public Task<ApiResult<List<ProjectDto>>> GetProjectsAsync(string accessToken, int pageNumber = 1) =>
+        GetAsync<List<ProjectDto>>($"api/v1/projects?pageNumber={pageNumber}", accessToken);
 
     public Task<ApiResult<ProjectDto>> GetProjectByIdAsync(string accessToken, int projectId) =>
         GetAsync<ProjectDto>($"api/v1/projects/{projectId}", accessToken);

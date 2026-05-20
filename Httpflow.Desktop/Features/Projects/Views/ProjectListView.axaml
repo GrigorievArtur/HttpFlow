@@ -62,20 +62,127 @@
                 <TextBlock x:Name="CurrentUserTextBlock"
                            Text="{Binding QuickActionsText}"/>
 
-                <Button Content="Run all tests"/>
+                <Border Classes.quick-actions-panel="True">
+                    <Grid RowDefinitions="Auto,Auto"
+                          RowSpacing="10">
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="{Binding SelectedProjectName}"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding QuickActionsStatusText}"
+                                           FontSize="12"
+                                           Opacity="0.72"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    MinWidth="132"
+                                    Command="{Binding RunAllTestsCommand}"
+                                    IsEnabled="{Binding CanRunSelectedProject}">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <PathIcon Width="14"
+                                              Height="14"
+                                              Data="M4,3 L16,10 L4,17 Z"/>
+                                    <TextBlock Text="Run tests"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
 
-                <TextBlock Text="Group tests"
-                           Margin="0,10,0,0"/>
+                        <Grid Grid.Row="1"
+                              IsVisible="{Binding IsRunProgressVisible}"
+                              RowDefinitions="Auto,Auto"
+                              RowSpacing="4">
+                            <TextBlock Text="{Binding RunProgressText}"
+                                       FontSize="11"
+                                       Opacity="0.74"/>
+                            <ProgressBar Grid.Row="1"
+                                         Height="7"
+                                         Maximum="{Binding RunProgressMaximum}"
+                                         Value="{Binding RunProgressValue}"
+                                         Foreground="#3DBB7D"
+                                         IsVisible="{Binding IsRunProgressHealthy}"/>
+                            <ProgressBar Grid.Row="1"
+                                         Height="7"
+                                         Maximum="{Binding RunProgressMaximum}"
+                                         Value="{Binding RunProgressValue}"
+                                         Foreground="#D94A4A"
+                                         IsVisible="{Binding IsRunProgressError}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
 
-                <Separator/>
+                <Grid RowDefinitions="Auto,*"
+                      RowSpacing="10">
+                    <TextBlock Text="{Binding QuickActionTestsStatusText}"
+                               FontWeight="SemiBold"/>
 
-                <TextBlock Text="Group1"
-                           Margin="0,10,0,0"/>
-                <Button Content="Run group test"/>
+                    <ScrollViewer Grid.Row="1"
+                                  MinHeight="320"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding QuickActionTests}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ProjectQuickActionTestViewModel">
+                                    <Border Classes.quick-test-row="True"
+                                            Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*,Auto"
+                                              ColumnSpacing="12">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="Auto,*"
+                                                      ColumnSpacing="8">
+                                                    <Border Classes.order-pill="True"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Order}"
+                                                                   FontSize="11"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Name}"
+                                                               FontWeight="SemiBold"
+                                                               TextWrapping="Wrap"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding NodeCountText}"
+                                                           FontSize="12"
+                                                           Opacity="0.72"/>
+                                            </StackPanel>
 
-                <TextBlock Text="Group2"
-                           Margin="0,10,0,0"/>
-                <Button Content="Run group test"/>
+                                            <Grid Grid.Column="1"
+                                                  VerticalAlignment="Top">
+                                                <Border Classes="quick-test-status passed"
+                                                        IsVisible="{Binding IsPassed}">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               FontSize="11"/>
+                                                </Border>
+                                                <Border Classes="quick-test-status failed"
+                                                        IsVisible="{Binding IsFailed}">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               FontSize="11"/>
+                                                </Border>
+                                                <Border Classes="quick-test-status running"
+                                                        IsVisible="{Binding IsRunning}">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               FontSize="11"/>
+                                                </Border>
+                                                <Border Classes="quick-test-status waiting"
+                                                        IsVisible="{Binding IsWaiting}">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               FontSize="11"/>
+                                                </Border>
+                                                <Border Classes="quick-test-status neutral"
+                                                        IsVisible="{Binding IsNeutral}">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               FontSize="11"/>
+                                                </Border>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </StackPanel>
         </Grid>
 
@@ -87,12 +194,14 @@
                   Margin="24">
                 <Border Padding="24"
                         MinWidth="320"
-                        MaxWidth="420">
+                        MaxWidth="420"
+                        Classes.project-create-card="True">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Create project"
                                    FontSize="20"/>
-                        <TextBlock Text="Project name"/>
                         <TextBox x:Name="ProjectNameTextBox"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
                                  PlaceholderText="Enter project name"
                                  Text="{Binding CreateProjectName, Mode=TwoWay}"/>
                         <TextBlock x:Name="CreateProjectMessageTextBlock"

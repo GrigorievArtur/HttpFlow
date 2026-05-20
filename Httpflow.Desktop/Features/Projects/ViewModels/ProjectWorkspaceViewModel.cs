@@ -501,6 +501,14 @@ public partial class ProjectWorkspaceViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsRunProgressError));
     }
 
+    partial void OnProjectTitleChanged(string value)
+    {
+        if (_projectSessionService.CurrentProject is not null)
+        {
+            _projectSessionService.UpdateProjectName(value);
+        }
+    }
+
     private void OnRunProgressChanged(ProjectRunProgress progress)
     {
         Dispatcher.UIThread.Post(() =>

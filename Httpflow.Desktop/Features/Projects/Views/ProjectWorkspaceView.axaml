@@ -11,37 +11,22 @@
              KeyDown="OnWorkspaceKeyDown"
              PointerMoved="OnWorkspacePointerMoved"
              PointerReleased="OnWorkspacePointerReleased"
+             Classes.workspace-root="True"
              x:Class="Httpflow.Desktop.Features.Projects.Views.ProjectWorkspaceView">
-    <UserControl.Styles>
-        <Style Selector="Border.test-column.selected">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
-            <Setter Property="BorderThickness" Value="3"/>
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-        </Style>
-        <Style Selector="Border.node-card.selected">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-        </Style>
-    </UserControl.Styles>
-
     <Grid x:Name="WorkspaceLayout"
           ColumnDefinitions="*,Auto,392"
-          Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+          Classes.workspace-layout="True">
         <Grid Grid.Column="0"
               RowDefinitions="Auto,*"
               Margin="16">
             <Border Grid.Row="0"
-                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="10,8">
+                    Classes.workspace-header="True">
                 <Grid RowDefinitions="Auto,Auto"
                       RowSpacing="8">
-                    <TextBlock Text="{Binding ProjectTitle}"
-                               VerticalAlignment="Center"
-                               FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding ProjectTitle, Mode=TwoWay}"
+                             Classes.project-title-editor="True"
+                             VerticalAlignment="Center"
+                             FontWeight="SemiBold"/>
                     <Grid Grid.Row="1"
                           IsVisible="{Binding IsRunProgressVisible}"
                           RowDefinitions="Auto,Auto"
@@ -67,10 +52,7 @@
 
             <Border Grid.Row="1"
                     Margin="0,12,0,0"
-                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="6"
+                    Classes.workspace-board="True"
                     ClipToBounds="True">
                 <Grid>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto"
@@ -78,7 +60,8 @@
                         <StackPanel Orientation="Horizontal"
                                     Spacing="14"
                                     Margin="12,0,12,0"
-                                    VerticalAlignment="Stretch">
+                                    VerticalAlignment="Stretch"
+                                    Classes.workspace-task-strip="True">
                             <ItemsControl ItemsSource="{Binding Tests}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -90,13 +73,8 @@
                                     <DataTemplate x:DataType="vm:WorkspaceTestColumnViewModel">
                                         <Border Width="220"
                                                 Height="{ReflectionBinding Bounds.Height, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
-                                                Padding="10"
                                                 Classes.test-column="True"
                                                 Classes.selected="{Binding IsSelected}"
-                                                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="0"
                                                 VerticalAlignment="Stretch"
                                                 PointerPressed="OnTestColumnPointerPressed"
                                                 PointerEntered="OnTestColumnPointerEnter"
@@ -110,8 +88,10 @@
                                                         <Button Width="24"
                                                                 Height="24"
                                                                 Padding="0"
+                                                                Classes.drag-grip="True"
                                                                 HorizontalContentAlignment="Center"
                                                                 VerticalContentAlignment="Center"
+                                                                ToolTip.Tip="Drag task"
                                                                 PointerPressed="OnTestGripPointerPressed"
                                                                 PointerReleased="OnTestGripPointerReleased"
                                                                 Tag="{Binding}">
@@ -124,9 +104,7 @@
                                                                    FontSize="18"
                                                                    FontWeight="SemiBold"/>
                                                         <Border Padding="5,1"
-                                                                BorderThickness="1"
-                                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                                                                CornerRadius="0">
+                                                                Classes.order-pill="True">
                                                             <TextBlock Text="{Binding Order}"
                                                                        FontSize="11"/>
                                                         </Border>
@@ -135,6 +113,8 @@
                                                             Width="24"
                                                             Height="24"
                                                             Padding="0"
+                                                            Classes.icon-button="True"
+                                                            ToolTip.Tip="Delete task"
                                                             Command="{ReflectionBinding DataContext.DeleteTestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding Id}">
                                                         <PathIcon Width="12"
@@ -153,13 +133,8 @@
                                                                     <StackPanel Spacing="8"
                                                                                 Margin="0,0,0,8">
                                                                         <Border MinHeight="108"
-                                                                                Padding="10"
                                                                                 Classes.node-card="True"
                                                                                 Classes.selected="{Binding IsSelected}"
-                                                                                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
-                                                                                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                                                                                BorderThickness="1"
-                                                                                CornerRadius="0"
                                                                                 PointerPressed="OnNodeCardPointerPressed"
                                                                                 PointerEntered="OnNodeCardPointerEnter"
                                                                                 PointerReleased="OnNodeCardPointerReleased"
@@ -188,12 +163,32 @@
                                                                                 </ContextMenu>
                                                                             </Border.ContextMenu>
                                                                             <StackPanel Spacing="8">
-                                                                                <Grid ColumnDefinitions="*,Auto"
+                                                                                <Grid ColumnDefinitions="Auto,*,Auto"
                                                                                       ColumnSpacing="8">
-                                                                                    <TextBlock Text="{Binding Name}"
+                                                                                    <Button Width="24"
+                                                                                            Height="24"
+                                                                                            Padding="0"
+                                                                                            Classes.drag-grip="True"
+                                                                                            HorizontalContentAlignment="Center"
+                                                                                            VerticalContentAlignment="Center"
+                                                                                            ToolTip.Tip="Drag node"
+                                                                                            PointerPressed="OnNodeGripPointerPressed"
+                                                                                            PointerReleased="OnNodeGripPointerReleased"
+                                                                                            Tag="{Binding}">
+                                                                                        <PathIcon Width="12"
+                                                                                                  Height="12"
+                                                                                                  Data="M7,2 H9 V4 H7 Z M11,2 H13 V4 H11 Z M7,7 H9 V9 H7 Z M11,7 H13 V9 H11 Z M7,12 H9 V14 H7 Z M11,12 H13 V14 H11 Z"/>
+                                                                                    </Button>
+                                                                                    <TextBlock Grid.Column="1"
+                                                                                               Text="{Binding Name}"
                                                                                                VerticalAlignment="Center"
                                                                                                FontSize="15"
                                                                                                FontWeight="SemiBold"/>
+                                                                                    <Border Grid.Column="2"
+                                                                                            Classes.order-pill="True">
+                                                                                        <TextBlock Text="{Binding Order}"
+                                                                                                   FontSize="11"/>
+                                                                                    </Border>
                                                                                 </Grid>
 
                                                                                 <Grid ColumnDefinitions="Auto,*"
@@ -209,9 +204,7 @@
 
                                                                                 <Border HorizontalAlignment="Left"
                                                                                         Margin="0,4,0,0"
-                                                                                        Padding="6,2"
-                                                                                        Background="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
-                                                                                        CornerRadius="0">
+                                                                                        Classes.node-type-pill="True">
                                                                                     <TextBlock Text="{Binding NodeType}"
                                                                                                Foreground="{DynamicResource SystemControlBackgroundAltHighBrush}"
                                                                                                FontSize="10"/>
@@ -222,6 +215,7 @@
                                                                         <TextBlock HorizontalAlignment="Center"
                                                                                    FontSize="20"
                                                                                    FontWeight="Bold"
+                                                                                   Classes.node-connector="True"
                                                                                    IsVisible="{Binding ShowConnector}"
                                                                                    Text="↓"/>
                                                                     </StackPanel>
@@ -234,6 +228,9 @@
                                                                 Margin="0,4,0,0"
                                                                 HorizontalAlignment="Center"
                                                                 Padding="0"
+                                                                Classes.icon-button="True"
+                                                                Classes.add-node-button="True"
+                                                                ToolTip.Tip="Add node"
                                                                 HorizontalContentAlignment="Center"
                                                                 VerticalContentAlignment="Center"
                                                                 Click="OnAddNodeButtonClick"
@@ -255,6 +252,7 @@
                                     Margin="0,0,0,0"
                                     VerticalAlignment="Top"
                                     Padding="0"
+                                    Classes.add-test-button="True"
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center"
                                     Command="{Binding AddTestCommand}">
@@ -275,16 +273,14 @@
                 Margin="0,16,0,0"
                 Padding="0"
                 VerticalAlignment="Top"
+                Classes.sidebar-toggle-button="True"
                 Content="{Binding SidebarToggleText}"
                 Command="{Binding ToggleSidebarCommand}"/>
 
         <Border Grid.Column="2"
                 x:Name="SidebarPanel"
                 IsVisible="{Binding IsSidebarOpen}"
-                Padding="22,18"
-                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                BorderThickness="1,0,0,0">
+                Classes.workspace-sidebar="True">
             <nodesPanel:NodesPanelView DataContext="{Binding NodesPanel}"/>
         </Border>
     </Grid>

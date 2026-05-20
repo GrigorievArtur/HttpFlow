@@ -26,4 +26,13 @@ public sealed class CollaboratorsApiClient(HttpClient httpClient) : ApiClientBas
         int userId,
         UpdateProjectCollaboratorRoleDto role) =>
         PutAsync<ProjectCollaboratorDto>($"api/v1/projects/{projectId}/collaborators/{userId}/role", role, accessToken);
+
+    public Task<ApiResult<List<ProjectInviteDto>>> GetMyInvitesAsync(string accessToken) =>
+        GetAsync<List<ProjectInviteDto>>("api/v1/users/me/invites", accessToken);
+
+    public Task<ApiResult<ProjectCollaboratorDto>> AcceptInviteAsync(string accessToken, int projectId) =>
+        PutAsync<ProjectCollaboratorDto>($"api/v1/users/me/invites/{projectId}/accept", new { }, accessToken);
+
+    public Task<ApiResult<ProjectInviteDto>> DeclineInviteAsync(string accessToken, int projectId) =>
+        DeleteAsync<ProjectInviteDto>($"api/v1/users/me/invites/{projectId}", accessToken);
 }

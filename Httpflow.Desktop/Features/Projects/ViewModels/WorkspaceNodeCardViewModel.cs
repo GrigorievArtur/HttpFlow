@@ -23,6 +23,8 @@ public sealed partial class WorkspaceNodeCardViewModel : ObservableObject
 
     public string Name => Node.Name;
 
+    public int Order => Node.Y + 1;
+
     public string NodeType => Node.NodeType;
 
     public string RequestMethod => GetValue("Method", "GET");

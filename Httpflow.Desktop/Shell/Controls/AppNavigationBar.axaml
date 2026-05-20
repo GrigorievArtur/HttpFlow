@@ -15,8 +15,12 @@
             <Button x:Name="DashboardButton"
                     Content="Dashboard"
                     Click="OnDashboardButtonClick"/>
-            <Button Content="Variables"/>
-            <Button Content="Logs"/>
+            <Button x:Name="VariablesButton"
+                    Content="Variables"
+                    IsVisible="False"/>
+            <Button x:Name="LogsButton"
+                    Content="Logs"
+                    IsVisible="False"/>
             <Button Content="Run"
                     Click="OnRunButtonClick"/>
         </StackPanel>

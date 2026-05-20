@@ -9,115 +9,126 @@
              x:DataType="vm:CollaboratorDashboardViewModel"
              x:Class="Httpflow.Desktop.Features.Collaborators.Views.CollaboratorDashboardView">
 
-    <Border Padding="18"
-            Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
-        <Grid ColumnDefinitions="420,*"
-              RowDefinitions="Auto,*">
-            <Grid Grid.Row="0"
-                  Grid.Column="0"
-                  Margin="0,0,16,12"
-                  ColumnDefinitions="*,Auto">
+    <Grid Margin="18"
+          ColumnDefinitions="*,*"
+          ColumnSpacing="18">
+        <Grid RowDefinitions="Auto,*"
+              RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto"
+                  ColumnSpacing="10">
                 <TextBox x:Name="SearchTextBox"
                          PlaceholderText="Search collaborators"
                          Text="{Binding SearchText, Mode=TwoWay}"/>
                 <Button Grid.Column="1"
-                        Width="42"
-                        Margin="10,0,0,0"
-                        Padding="0"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Content="⇅"/>
+                        MinWidth="128"
+                        Command="{Binding CycleSortModeCommand}">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+                        <PathIcon Width="14"
+                                  Height="14"
+                                  Data="M6,3 L3,6 L5,6 L5,15 L7,15 L7,6 L9,6 Z M14,17 L17,14 L15,14 L15,5 L13,5 L13,14 L11,14 Z"/>
+                        <TextBlock Text="{Binding SortButtonText}"/>
+                    </StackPanel>
+                </Button>
             </Grid>
 
             <Border Grid.Row="1"
-                    Grid.Column="0"
-                    Margin="0,0,16,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                    CornerRadius="6"
+                    Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
                 <ScrollViewer>
                     <StackPanel x:Name="CollaboratorsListPanel"
                                 Spacing="0"/>
                 </ScrollViewer>
             </Border>
+        </Grid>
 
-            <Grid Grid.RowSpan="2"
-                  Grid.Column="1"
-                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
-                  RowSpacing="14">
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,Auto,*"
+              RowSpacing="14">
+            <StackPanel Spacing="5">
                 <TextBlock x:Name="ProjectTextBlock"
                            Text="{Binding ProjectText}"
-                           FontSize="16"
-                           FontWeight="SemiBold"/>
-
-                <TextBlock Grid.Row="1"
-                           Text="Email"/>
-
-                <TextBox x:Name="InviteEmailTextBox"
-                         Grid.Row="2"
-                         PlaceholderText="collaborator@company.com"
-                         Text="{Binding InviteEmail, Mode=TwoWay}"/>
-
-                <TextBlock Grid.Row="3"
-                           Text="Role"/>
-
-                <ComboBox x:Name="InviteRoleComboBox"
-                          Grid.Row="4"
-                          Width="180"
-                          HorizontalAlignment="Left"
-                          SelectedIndex="1"
-                          IsEnabled="{Binding IsManagementEnabled}">
-                    <ComboBoxItem Content="Admin"/>
-                    <ComboBoxItem Content="Member"/>
-                    <ComboBoxItem Content="Visitor"/>
-                </ComboBox>
-
-                <Button x:Name="InviteButton"
-                        Grid.Row="5"
-                        Height="44"
-                        Content="+ Invite collaborator"
-                        FontWeight="SemiBold"
-                        Command="{Binding InviteCollaboratorCommand}"
-                        IsEnabled="{Binding IsManagementEnabled}"/>
-
-                <TextBlock Grid.Row="6"
-                           Text="Selected collaborator"
                            FontSize="18"
-                           FontWeight="SemiBold"
-                           Margin="0,10,0,0"/>
+                           FontWeight="SemiBold"/>
+                <TextBlock x:Name="StatusTextBlock"
+                           Text="{Binding StatusText}"
+                           Opacity="0.72"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
 
-                <Border Grid.Row="7"
-                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="18">
-                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*"
-                          ColumnDefinitions="120,*"
-                          RowSpacing="18"
+            <Border Grid.Row="1"
+                    Classes.dashboard-panel="True">
+                <Grid RowDefinitions="Auto,Auto,Auto"
+                      RowSpacing="10">
+                    <TextBlock Text="Invite collaborator"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,150"
+                          ColumnSpacing="10">
+                        <TextBox x:Name="InviteEmailTextBox"
+                                 PlaceholderText="collaborator@company.com"
+                                 Text="{Binding InviteEmail, Mode=TwoWay}"/>
+                        <ComboBox x:Name="InviteRoleComboBox"
+                                  Grid.Column="1"
+                                  SelectedIndex="1"
+                                  IsEnabled="{Binding IsManagementEnabled}">
+                            <ComboBoxItem Content="Admin"/>
+                            <ComboBoxItem Content="Member"/>
+                            <ComboBoxItem Content="Visitor"/>
+                        </ComboBox>
+                    </Grid>
+
+                    <Button x:Name="InviteButton"
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            Content="Invite"
+                            Command="{Binding InviteCollaboratorCommand}"
+                            IsEnabled="{Binding IsManagementEnabled}"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Classes.dashboard-panel="True">
+                <Grid RowDefinitions="Auto,Auto"
+                      RowSpacing="16">
+                    <TextBlock Text="Selected collaborator"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+
+                    <Grid Grid.Row="1"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          ColumnDefinitions="130,*"
+                          RowSpacing="14"
                           ColumnSpacing="12">
-                        <TextBlock Grid.ColumnSpan="2"
-                                   x:Name="SelectedNameTextBlock"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Text="{Binding SelectedCollaboratorName}"/>
+                        <TextBlock Text="Name"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock x:Name="SelectedNameTextBlock"
+                                   Grid.Column="1"
+                                   Text="{Binding SelectedCollaboratorName}"
+                                   TextWrapping="Wrap"/>
 
                         <TextBlock Grid.Row="1"
                                    Text="Email"
-                                   VerticalAlignment="Center"/>
+                                   FontWeight="SemiBold"/>
                         <TextBlock x:Name="SelectedEmailTextBlock"
                                    Grid.Row="1"
                                    Grid.Column="1"
-                                   VerticalAlignment="Center"
-                                   Text="{Binding SelectedCollaboratorEmail}"/>
+                                   Text="{Binding SelectedCollaboratorEmail}"
+                                   TextWrapping="Wrap"/>
 
                         <TextBlock Grid.Row="2"
                                    Text="Role"
+                                   FontWeight="SemiBold"
                                    VerticalAlignment="Center"/>
                         <ComboBox x:Name="RoleComboBox"
                                   Grid.Row="2"
                                   Grid.Column="1"
                                   Width="180"
+                                  HorizontalAlignment="Left"
                                   IsEnabled="{Binding CanEditSelectedRole}"
                                   SelectionChanged="OnRoleComboBoxSelectionChanged">
                             <ComboBoxItem Content="Admin"/>
@@ -126,23 +137,26 @@
                         </ComboBox>
 
                         <TextBlock Grid.Row="3"
-                                   Text="Access"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock x:Name="AccessTextBlock"
-                                   Grid.Row="3"
+                                   Text="Status"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Grid.Row="3"
                                    Grid.Column="1"
-                                   VerticalAlignment="Center"
-                                   Text="{Binding AccessText}"/>
+                                   Text="{Binding SelectedCollaboratorStatus}"/>
 
                         <TextBlock Grid.Row="4"
-                                   Grid.ColumnSpan="2"
-                                   x:Name="StatusTextBlock"
-                                   VerticalAlignment="Top"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding StatusText}"/>
+                                   Text="Joined"
+                                   FontWeight="SemiBold"/>
+                        <Grid Grid.Row="4"
+                              Grid.Column="1"
+                              ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12">
+                            <TextBlock Text="{Binding SelectedCollaboratorJoinedText}"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding SelectedCollaboratorOnlineText}"/>
+                        </Grid>
                     </Grid>
-                </Border>
-            </Grid>
+                </Grid>
+            </Border>
         </Grid>
-    </Border>
+    </Grid>
 </UserControl>

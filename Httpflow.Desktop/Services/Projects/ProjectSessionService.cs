@@ -89,6 +89,31 @@ public sealed class ProjectSessionService
         return SaveCurrentProject();
     }
 
+    public bool UpdateProjectName(string name)
+    {
+        EnsureProjectLoaded();
+
+        var trimmedName = name.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            return false;
+        }
+
+        if (string.Equals(CurrentProject!.Name, trimmedName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        CurrentProject.Name = trimmedName;
+        if (_app.CurrentProject is not null && _app.CurrentProject.Id == CurrentProject.ProjectId)
+        {
+            _app.CurrentProject = _app.CurrentProject with { Name = trimmedName };
+        }
+
+        MarkDirty();
+        return true;
+    }
+
     public async Task<ApiResult<ProjectDto>> DeleteProjectById(int projectId)
     {
         var token = await _app.JwtSessionService.GetTokenAsync();
@@ -257,6 +282,7 @@ public sealed class ProjectSessionService
             return false;
         }
 
+        NormalizeTestOrder(CurrentProject.Tests);
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
@@ -390,9 +416,10 @@ public sealed class ProjectSessionService
 
         var test = CurrentProject.Tests[sourceIndex];
         CurrentProject.Tests.RemoveAt(sourceIndex);
-        var insertIndex = sourceIndex < targetIndex ? targetIndex : targetIndex + 1;
+        var insertIndex = sourceIndex < targetIndex ? targetIndex : targetIndex;
         CurrentProject.Tests.Insert(Math.Min(insertIndex, CurrentProject.Tests.Count), test);
 
+        NormalizeTestOrder(CurrentProject.Tests);
         SyncLegacyNodes(CurrentProject);
         MarkDirty();
         return true;
@@ -747,6 +774,14 @@ public sealed class ProjectSessionService
                 Values = UpdateNodeOrderValue(node.Values, index + 1)
             })
             .ToList();
+    }
+
+    private static void NormalizeTestOrder(IReadOnlyList<ProjectTestState> tests)
+    {
+        for (var index = 0; index < tests.Count; index++)
+        {
+            tests[index].Order = index + 1;
+        }
     }
 
     private static IReadOnlyList<NodeValueRecord> UpdateNodeOrderValue(IReadOnlyList<NodeValueRecord> values, int order)

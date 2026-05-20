@@ -36,6 +36,7 @@ public partial class CollaboratorDashboardView : UserControl
         if (e.PropertyName is nameof(CollaboratorDashboardViewModel.SearchText)
             or nameof(CollaboratorDashboardViewModel.SelectedCollaborator)
             or nameof(CollaboratorDashboardViewModel.IsManagementEnabled)
+            or nameof(CollaboratorDashboardViewModel.CollaboratorSortMode)
             or nameof(CollaboratorDashboardViewModel.StatusText))
         {
             RenderCollaborators();
@@ -68,9 +69,9 @@ public partial class CollaboratorDashboardView : UserControl
     {
         var border = new Border
         {
-            BorderBrush = Brushes.LightGray,
+            BorderBrush = new SolidColorBrush(Color.Parse("#D9DEE8")),
             BorderThickness = new Thickness(0, 0, 0, 1),
-            Padding = new Thickness(14, 16),
+            Padding = new Thickness(12, 14),
             Background = _viewModel.SelectedCollaborator?.UserId == collaborator.UserId
                 ? new SolidColorBrush(Color.Parse("#EEF3FF"))
                 : Brushes.Transparent
@@ -88,26 +89,43 @@ public partial class CollaboratorDashboardView : UserControl
 
         var rowGrid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto")
+            ColumnDefinitions = new ColumnDefinitions("*,Auto"),
+            ColumnSpacing = 10
         };
 
-        rowGrid.Children.Add(new TextBlock
+        var status = collaborator.IsOwner
+            ? "Owner"
+            : collaborator.Status;
+
+        rowGrid.Children.Add(new StackPanel
         {
-            Text = collaborator.IsOwner
-                ? $"{CollaboratorDashboardViewModel.GetFullName(collaborator)} - {collaborator.Role} - Owner"
-                : $"{CollaboratorDashboardViewModel.GetFullName(collaborator)} - {collaborator.Role}",
-            FontSize = 16,
-            VerticalAlignment = VerticalAlignment.Center
+            Spacing = 4,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = $"{collaborator.Email} - {collaborator.Role}",
+                    FontSize = 15,
+                    FontWeight = FontWeight.SemiBold,
+                    TextWrapping = TextWrapping.Wrap
+                },
+                new TextBlock
+                {
+                    Text = CollaboratorDashboardViewModel.GetFullName(collaborator),
+                    Opacity = 0.72
+                }
+            }
         });
 
-        var emailLabel = new TextBlock
+        var statusLabel = new TextBlock
         {
-            Text = collaborator.Email,
+            Text = status,
+            FontSize = 12,
             HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Top
         };
-        Grid.SetColumn(emailLabel, 1);
-        rowGrid.Children.Add(emailLabel);
+        Grid.SetColumn(statusLabel, 1);
+        rowGrid.Children.Add(statusLabel);
 
         button.Content = rowGrid;
         border.Child = button;

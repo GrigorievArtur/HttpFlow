@@ -1,21 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Httpflow.Desktop.Dtos.Projects;
+using Httpflow.Desktop.Models.Projects;
 using Httpflow.Desktop.Services.Projects;
 using Httpflow.Desktop.ViewModels;
 
 namespace Httpflow.Desktop.Features.Projects.ViewModels;
 
-public partial class ProjectListViewModel : ViewModelBase
+public partial class ProjectListViewModel : ViewModelBase, IDisposable
 {
     private const string DefaultProjectValue = "{}";
-    private const int PageSize = 5;
+    private const int PageSize = 10;
 
     private readonly App _app;
 
@@ -23,11 +26,14 @@ public partial class ProjectListViewModel : ViewModelBase
     {
         _app = app;
         QuickActionsText = quickActionsText;
+        _app.ProjectTestRunner.ProgressChanged += OnRunProgressChanged;
     }
 
     public event EventHandler? WorkspaceRequested;
 
     public List<ProjectDto> CurrentPageProjects { get; } = [];
+
+    public ObservableCollection<ProjectQuickActionTestViewModel> QuickActionTests { get; } = [];
 
     public IReadOnlyList<ProjectDto> VisibleProjects =>
         string.IsNullOrWhiteSpace(SearchText)
@@ -46,6 +52,12 @@ public partial class ProjectListViewModel : ViewModelBase
 
     public bool IsCreateProjectButtonsEnabled => !IsCreateProjectBusy;
 
+    public bool CanRunSelectedProject => IsQuickActionsLoaded && !IsRunInProgress;
+
+    public bool HasQuickActionTests => QuickActionTests.Count > 0;
+
+    public bool IsRunProgressError => IsRunProgressVisible && !IsRunProgressHealthy;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VisibleProjects))]
     private string searchText = string.Empty;
@@ -54,7 +66,47 @@ public partial class ProjectListViewModel : ViewModelBase
     private string quickActionsText = "Quick actions";
 
     [ObservableProperty]
+    private int? selectedProjectId;
+
+    [ObservableProperty]
+    private string selectedProjectName = "No project selected";
+
+    [ObservableProperty]
+    private string quickActionsStatusText = "Select a project to load its quick actions.";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRunSelectedProject))]
+    [NotifyCanExecuteChangedFor(nameof(RunAllTestsCommand))]
+    private bool isQuickActionsLoaded;
+
+    [ObservableProperty]
+    private bool isQuickActionsBusy;
+
+    [ObservableProperty]
+    private string quickActionTestsStatusText = "Project tests will appear here.";
+
+    [ObservableProperty]
     private string projectsStatusText = "Loading projects...";
+
+    [ObservableProperty]
+    private double runProgressMaximum = 1;
+
+    [ObservableProperty]
+    private double runProgressValue;
+
+    [ObservableProperty]
+    private string runProgressText = "No run yet";
+
+    [ObservableProperty]
+    private bool isRunProgressVisible;
+
+    [ObservableProperty]
+    private bool isRunProgressHealthy = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRunSelectedProject))]
+    [NotifyCanExecuteChangedFor(nameof(RunAllTestsCommand))]
+    private bool isRunInProgress;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CurrentPageDisplay), nameof(CanGoPrevious))]
@@ -99,7 +151,7 @@ public partial class ProjectListViewModel : ViewModelBase
                 return;
             }
 
-            var result = await _app.ProjectsApiClient.GetProjectsAsync(token, CurrentPage, PageSize);
+            var result = await _app.ProjectsApiClient.GetProjectsAsync(token, CurrentPage);
 
             if (!result.IsSuccess)
             {
@@ -239,6 +291,96 @@ public partial class ProjectListViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task LoadQuickActionsAsync(ProjectDto? project)
+    {
+        if (project is null)
+        {
+            return;
+        }
+
+        var isNewSelection = SelectedProjectId != project.Id;
+        SelectedProjectId = project.Id;
+        SelectedProjectName = GetProjectDisplayName(project);
+        QuickActionsStatusText = "Loading project quick actions...";
+        QuickActionTestsStatusText = "Loading project tests...";
+        IsQuickActionsBusy = true;
+        IsQuickActionsLoaded = false;
+
+        if (isNewSelection)
+        {
+            ResetRunProgress();
+        }
+
+        try
+        {
+            _app.CurrentProject = project;
+            var session = await _app.ProjectSessionService.LoadProjectById(project.Id);
+
+            if (session is null)
+            {
+                QuickActionsStatusText = "Unable to load this project.";
+                ClearQuickActionTests();
+                return;
+            }
+
+            SelectedProjectName = string.IsNullOrWhiteSpace(session.Name)
+                ? GetProjectDisplayName(project)
+                : session.Name;
+            QuickActionsStatusText = "Ready";
+            IsQuickActionsLoaded = true;
+            RefreshQuickActionTests(session);
+        }
+        catch (HttpRequestException)
+        {
+            QuickActionsStatusText = "Could not reach the backend.";
+            ClearQuickActionTests();
+        }
+        catch
+        {
+            QuickActionsStatusText = "Something went wrong while loading the project.";
+            ClearQuickActionTests();
+        }
+        finally
+        {
+            IsQuickActionsBusy = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRunSelectedProject))]
+    private async Task RunAllTestsAsync()
+    {
+        if (SelectedProjectId is not { } projectId)
+        {
+            return;
+        }
+
+        IsRunInProgress = true;
+
+        try
+        {
+            if (_app.ProjectSessionService.CurrentProject?.ProjectId != projectId)
+            {
+                await _app.ProjectSessionService.LoadProjectById(projectId);
+            }
+
+            await _app.ProjectTestRunner.RunCurrentProjectAsync();
+            RefreshQuickActionTests(_app.ProjectSessionService.CurrentProject);
+        }
+        catch (HttpRequestException)
+        {
+            ApplyRunFailure("Could not reach the backend.");
+        }
+        catch
+        {
+            ApplyRunFailure("Something went wrong while running tests.");
+        }
+        finally
+        {
+            IsRunInProgress = false;
+        }
+    }
+
+    [RelayCommand]
     private async Task DeleteProjectAsync(ProjectDto project)
     {
         ProjectsStatusText = "Deleting project...";
@@ -255,6 +397,11 @@ public partial class ProjectListViewModel : ViewModelBase
                     _ => result.ErrorMessage ?? "Unable to delete the project."
                 };
                 return;
+            }
+
+            if (SelectedProjectId == project.Id)
+            {
+                ClearSelectedQuickActions();
             }
 
             await LoadProjectListAsync();
@@ -289,5 +436,111 @@ public partial class ProjectListViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanGoNext));
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    public void Dispose()
+    {
+        _app.ProjectTestRunner.ProgressChanged -= OnRunProgressChanged;
+    }
+
+    partial void OnIsRunProgressHealthyChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsRunProgressError));
+    }
+
+    partial void OnIsRunProgressVisibleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsRunProgressError));
+    }
+
+    private static string GetProjectDisplayName(ProjectDto project)
+    {
+        return string.IsNullOrWhiteSpace(project.Name) ? $"Project #{project.Id}" : project.Name;
+    }
+
+    private void RefreshQuickActionTests(ProjectSessionState? session)
+    {
+        QuickActionTests.Clear();
+
+        if (session is null)
+        {
+            QuickActionTestsStatusText = "No project tests loaded.";
+            OnPropertyChanged(nameof(HasQuickActionTests));
+            return;
+        }
+
+        foreach (var test in session.Tests
+                     .OrderBy(test => Math.Max(1, test.Order))
+                     .ThenBy(test => test.Id))
+        {
+            QuickActionTests.Add(new ProjectQuickActionTestViewModel(test));
+        }
+
+        QuickActionTestsStatusText = QuickActionTests.Count == 0
+            ? "No tests in this project."
+            : $"Project tests ({QuickActionTests.Count})";
+        OnPropertyChanged(nameof(HasQuickActionTests));
+    }
+
+    private void ClearQuickActionTests()
+    {
+        QuickActionTests.Clear();
+        QuickActionTestsStatusText = "No project tests loaded.";
+        OnPropertyChanged(nameof(HasQuickActionTests));
+    }
+
+    private void ResetRunProgress()
+    {
+        RunProgressMaximum = 1;
+        RunProgressValue = 0;
+        RunProgressText = "No run yet";
+        IsRunProgressVisible = false;
+        IsRunProgressHealthy = true;
+        IsRunInProgress = false;
+    }
+
+    private void ClearSelectedQuickActions()
+    {
+        SelectedProjectId = null;
+        SelectedProjectName = "No project selected";
+        QuickActionsStatusText = "Select a project to load its quick actions.";
+        IsQuickActionsLoaded = false;
+        IsQuickActionsBusy = false;
+        ClearQuickActionTests();
+        QuickActionTestsStatusText = "Project tests will appear here.";
+        ResetRunProgress();
+    }
+
+    private void OnRunProgressChanged(ProjectRunProgress progress)
+    {
+        if (SelectedProjectId is null ||
+            _app.ProjectSessionService.CurrentProject?.ProjectId != SelectedProjectId.Value)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            RunProgressMaximum = Math.Max(1, progress.TotalNodes);
+            RunProgressValue = progress.CompletedNodes;
+            RunProgressText = progress.TotalNodes == 0
+                ? progress.Message
+                : $"{progress.CompletedNodes}/{progress.TotalNodes} nodes";
+            IsRunProgressVisible = progress.IsRunning || progress.TotalNodes > 0;
+            IsRunProgressHealthy = !progress.HasError;
+            IsRunInProgress = progress.IsRunning;
+            RefreshQuickActionTests(_app.ProjectSessionService.CurrentProject);
+        });
+    }
+
+    private void ApplyRunFailure(string message)
+    {
+        RunProgressMaximum = 1;
+        RunProgressValue = 1;
+        RunProgressText = message;
+        IsRunProgressVisible = true;
+        IsRunProgressHealthy = false;
+        QuickActionsStatusText = message;
+        RefreshQuickActionTests(_app.ProjectSessionService.CurrentProject);
     }
 }

@@ -12,6 +12,13 @@ using Httpflow.Desktop.ViewModels;
 
 namespace Httpflow.Desktop.Features.Collaborators.ViewModels;
 
+public enum CollaboratorSortMode
+{
+    DateJoined,
+    Online,
+    Role
+}
+
 public partial class CollaboratorDashboardViewModel : ViewModelBase
 {
     private const string AdminRole = "Admin";
@@ -28,13 +35,15 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
     public List<ProjectCollaboratorDto> Collaborators { get; } = [];
 
     public IReadOnlyCollection<ProjectCollaboratorDto> VisibleCollaborators =>
-        string.IsNullOrWhiteSpace(SearchText)
-            ? Collaborators
-            : Collaborators
-                .Where(collaborator => GetFullName(collaborator).Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                    || collaborator.Email.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                    || collaborator.Role.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+        ApplySort(FilteredCollaborators).ToList();
+
+    public string SortButtonText => CollaboratorSortMode switch
+    {
+        CollaboratorSortMode.DateJoined => "Date joined",
+        CollaboratorSortMode.Online => "Online",
+        CollaboratorSortMode.Role => "Role",
+        _ => "Date joined"
+    };
 
     public bool CanEditSelectedRole =>
         IsManagementEnabled && SelectedCollaborator is { IsOwner: false };
@@ -42,6 +51,11 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VisibleCollaborators))]
     private string searchText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VisibleCollaborators))]
+    [NotifyPropertyChangedFor(nameof(SortButtonText))]
+    private CollaboratorSortMode collaboratorSortMode;
 
     [ObservableProperty]
     private string projectText = "Select a project";
@@ -73,13 +87,22 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
     private ProjectCollaboratorDto? selectedCollaborator;
 
     [ObservableProperty]
-    private string selectedCollaboratorName = "Name: No collaborator selected";
+    private string selectedCollaboratorName = "No collaborator selected";
 
     [ObservableProperty]
     private string selectedCollaboratorEmail = "-";
 
     [ObservableProperty]
     private string accessText = "-";
+
+    [ObservableProperty]
+    private string selectedCollaboratorStatus = "-";
+
+    [ObservableProperty]
+    private string selectedCollaboratorJoinedText = "-";
+
+    [ObservableProperty]
+    private string selectedCollaboratorOnlineText = "-";
 
     [ObservableProperty]
     private string selectedRole = MemberRole;
@@ -101,16 +124,26 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
 
         if (value is null)
         {
-            SelectedCollaboratorName = "Name: No collaborator selected";
+            SelectedCollaboratorName = "No collaborator selected";
             SelectedCollaboratorEmail = "-";
             AccessText = "-";
+            SelectedCollaboratorStatus = "-";
+            SelectedCollaboratorJoinedText = "-";
+            SelectedCollaboratorOnlineText = "-";
             SelectedRole = MemberRole;
         }
         else
         {
-            SelectedCollaboratorName = $"Name: {GetFullName(value)}";
+            SelectedCollaboratorName = GetFullName(value);
             SelectedCollaboratorEmail = value.Email;
-            AccessText = value.IsOwner ? "Owner access" : $"{value.Role} access";
+            AccessText = value.IsOwner ? "Owner" : value.Role;
+            SelectedCollaboratorStatus = value.Status;
+            SelectedCollaboratorJoinedText = value.IsOwner
+                ? "Owner"
+                : value.JoinedAt is null
+                    ? "Pending"
+                    : value.JoinedAt.Value.ToLocalTime().ToString("g");
+            SelectedCollaboratorOnlineText = value.IsOnline ? "Online" : "Offline";
             SelectedRole = value.Role;
         }
 
@@ -217,6 +250,17 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void CycleSortMode()
+    {
+        CollaboratorSortMode = CollaboratorSortMode switch
+        {
+            CollaboratorSortMode.DateJoined => CollaboratorSortMode.Online,
+            CollaboratorSortMode.Online => CollaboratorSortMode.Role,
+            _ => CollaboratorSortMode.DateJoined
+        };
+    }
+
+    [RelayCommand]
     private void SelectCollaborator(ProjectCollaboratorDto? collaborator)
     {
         SelectedCollaborator = collaborator;
@@ -269,6 +313,7 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
 
             InviteEmail = string.Empty;
             await LoadCollaboratorsAsync(result.Data?.UserId);
+            StatusText = "Invite sent. They can accept or decline it from Profile.";
         }
         catch (HttpRequestException)
         {
@@ -345,4 +390,42 @@ public partial class CollaboratorDashboardViewModel : ViewModelBase
 
     public static string GetFullName(ProjectCollaboratorDto collaborator) =>
         $"{collaborator.Firstname} {collaborator.Lastname}";
+
+    private IReadOnlyCollection<ProjectCollaboratorDto> FilteredCollaborators =>
+        string.IsNullOrWhiteSpace(SearchText)
+            ? Collaborators
+            : Collaborators
+                .Where(collaborator => GetFullName(collaborator).Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                    || collaborator.Email.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                    || collaborator.Role.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                    || collaborator.Status.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+    private IEnumerable<ProjectCollaboratorDto> ApplySort(IEnumerable<ProjectCollaboratorDto> collaborators)
+    {
+        return CollaboratorSortMode switch
+        {
+            CollaboratorSortMode.Online => collaborators
+                .OrderByDescending(collaborator => collaborator.IsOnline)
+                .ThenBy(collaborator => collaborator.Email),
+            CollaboratorSortMode.Role => collaborators
+                .OrderBy(collaborator => GetRoleRank(collaborator.Role))
+                .ThenBy(collaborator => collaborator.Email),
+            _ => collaborators
+                .OrderByDescending(collaborator => collaborator.IsOwner)
+                .ThenByDescending(collaborator => collaborator.JoinedAt ?? collaborator.InvitedAt)
+                .ThenBy(collaborator => collaborator.Email)
+        };
+    }
+
+    private static int GetRoleRank(string role)
+    {
+        return role switch
+        {
+            AdminRole => 0,
+            MemberRole => 1,
+            VisitorRole => 2,
+            _ => 3
+        };
+    }
 }
